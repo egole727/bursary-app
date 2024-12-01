@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Wards{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Wards</h2>
+        <a href="{{ url_for('admin.new_ward') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> New Ward
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Description</th>
+                            <th>Students</th>
+                            <th>Active Programs</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ward in wards %}
+                        <tr>
+                            <td>{{ ward.name }}</td>
+                            <td>{{ ward.description }}</td>
+                            <td>{{ ward.profiles.count() }}</td>
+                            <td>
+                                {% set active_programs = ward.bursary_programs|selectattr("is_active")|list %}
+                                {{ active_programs|length }}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('admin.edit_ward', ward_id=ward.id) }}" 
+                                   class="btn btn-sm btn-primary me-1">
+                                    <i class="fas fa-edit"></i> Edit
+                                </a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <p class="text-muted mb-0">No wards found. Create your first ward to get started.</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

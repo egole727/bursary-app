@@ -1,0 +1,217 @@
+/* Admin dashboard specific styles */
+
+/* Admin Layout */
+.admin-layout {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+    width: 260px;
+    background: #2c3e50;
+    color: #fff;
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    z-index: 100;
+    transition: all 0.3s;
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-brand {
+    color: #fff;
+    text-decoration: none;
+    font-size: 1.25rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sidebar-brand:hover {
+    color: #fff;
+}
+
+.sidebar-content {
+    padding: 1rem 0;
+}
+
+.sidebar-nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-item {
+    margin: 0.25rem 0;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1.5rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s;
+    gap: 0.75rem;
+}
+
+.sidebar-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-link.active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sidebar-link i {
+    width: 1.25rem;
+    text-align: center;
+}
+
+/* Main Content Wrapper */
+.main-wrapper {
+    flex: 1;
+    margin-left: 260px;
+    min-height: 100vh;
+    background: #f8f9fa;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Top Navigation */
+.navbar {
+    padding: 1rem;
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.05);
+}
+
+.content {
+    flex: 1;
+    padding: 2rem;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 991.98px) {
+    .sidebar {
+        margin-left: -260px;
+    }
+
+    .main-wrapper {
+        margin-left: 0;
+    }
+
+    .sidebar-mobile-open .sidebar {
+        margin-left: 0;
+    }
+
+    .sidebar-toggle {
+        display: block !important;
+    }
+}
+
+@media (min-width: 992px) {
+    .sidebar-toggle {
+        display: none !important;
+    }
+}
+
+/* Dashboard statistics cards */
+.stats-card {
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+    transform: translateY(-5px);
+}
+
+.stats-card .card-body {
+    padding: 1.5rem;
+}
+
+.stats-card i {
+    opacity: 0.7;
+}
+
+.stats-card .display-4 {
+    font-weight: 600;
+    letter-spacing: -0.5px;
+}
+
+/* Recent applications table */
+.applications-table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.5px;
+}
+
+.avatar-sm {
+    width: 32px;
+    height: 32px;
+    font-size: 0.875rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Budget progress bar */
+.budget-progress {
+    height: 10px;
+    border-radius: 5px;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.budget-progress .progress-bar {
+    border-radius: 5px;
+}
+
+/* Quick actions */
+.quick-actions .btn {
+    padding: 0.75rem 1rem;
+    font-weight: 500;
+    font-family: var(--font-family);
+}
+
+.quick-actions i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .content {
+        padding: 1rem;
+    }
+
+    .stats-card .display-4 {
+        font-size: 2rem;
+    }
+    
+    .avatar-sm {
+        width: 24px;
+        height: 24px;
+        font-size: 0.75rem;
+    }
+    
+    .applications-table {
+        font-size: 0.875rem;
+    }
+
+    .display-4 {
+        font-size: 2.5rem;
+    }
+}
