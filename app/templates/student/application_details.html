@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Application Details{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Application Details</h4>
+                </div>
+                <div class="card-body">
+                    <!-- Program Information -->
+                    <div class="mb-4">
+                        <h5>Program Information</h5>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Program:</strong> {{ application.program.name }}</p>
+                                <p><strong>Ward:</strong> {{ application.ward.name }}</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Status:</strong> 
+                                    <span class="badge bg-{{ 'success' if application.status == 'APPROVED' 
+                                                            else 'danger' if application.status == 'REJECTED'
+                                                            else 'warning' }}">
+                                        {{ application.status }}
+                                    </span>
+                                </p>
+                                <p><strong>Applied On:</strong> {{ application.created_at.strftime('%Y-%m-%d') }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Application Details -->
+                    <div class="mb-4">
+                        <h5>Application Details</h5>
+                        <div class="row">
+                            <div class="col-md-12">
+                                <p><strong>Amount Requested:</strong> KES {{ '%0.2f'|format(application.amount|float) }}</p>
+                                <p><strong>Reason for Application:</strong></p>
+                                <p class="text-muted">{{ application.reason }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Supporting Documents -->
+                    {% if application.documents %}
+                    <div class="mb-4">
+                        <h5>Supporting Documents</h5>
+                        <div class="list-group">
+                            {% for document in application.documents %}
+                                <a href="{{ url_for('static', filename='uploads/' + document.url) }}" 
+                                   class="list-group-item list-group-item-action" target="_blank">
+                                    <i class="fas fa-file me-2"></i>{{ document.url }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Application Timeline -->
+                    <div class="mb-4">
+                        <h5>Application Timeline</h5>
+                        <div class="list-group">
+                            {% for entry in application.timeline %}
+                                <div class="list-group-item">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">{{ entry.action }}</h6>
+                                        <small class="text-muted">{{ entry.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                                    </div>
+                                    {% if entry.notes %}
+                                        <p class="mb-1">{{ entry.notes }}</p>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('student.dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

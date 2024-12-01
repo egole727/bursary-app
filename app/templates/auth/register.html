@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Register - Bursary Management System{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="meta-card">
+                <h2 class="text-center mb-4">Create Account</h2>
+                <form method="POST" action="" novalidate>
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="meta-form-group mb-3">
+                                {{ form.first_name.label(class="form-label") }}
+                                {% if form.first_name.errors %}
+                                    {{ form.first_name(class="meta-input is-invalid") }}
+                                    {% for error in form.first_name.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    {{ form.first_name(class="meta-input", placeholder="Enter your first name") }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="meta-form-group mb-3">
+                                {{ form.last_name.label(class="form-label") }}
+                                {% if form.last_name.errors %}
+                                    {{ form.last_name(class="meta-input is-invalid") }}
+                                    {% for error in form.last_name.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    {{ form.last_name(class="meta-input", placeholder="Enter your last name") }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="meta-form-group mb-3">
+                        {{ form.email.label(class="form-label") }}
+                        {% if form.email.errors %}
+                            {{ form.email(class="meta-input is-invalid") }}
+                            {% for error in form.email.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        {% else %}
+                            {{ form.email(class="meta-input", placeholder="Enter your email") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="meta-form-group mb-3">
+                                {{ form.password.label(class="form-label") }}
+                                {% if form.password.errors %}
+                                    {{ form.password(class="meta-input is-invalid") }}
+                                    {% for error in form.password.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    {{ form.password(class="meta-input", placeholder="Enter your password") }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="meta-form-group mb-3">
+                                {{ form.password2.label(class="form-label") }}
+                                {% if form.password2.errors %}
+                                    {{ form.password2(class="meta-input is-invalid") }}
+                                    {% for error in form.password2.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    {{ form.password2(class="meta-input", placeholder="Confirm your password") }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="meta-form-group mb-3">
+                                {{ form.id_number.label(class="form-label") }}
+                                {% if form.id_number.errors %}
+                                    {{ form.id_number(class="meta-input is-invalid") }}
+                                    {% for error in form.id_number.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    {{ form.id_number(class="meta-input", placeholder="Enter your ID number") }}
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <div class="meta-form-group mb-3">
+                                {{ form.phone_number.label(class="form-label") }}
+                                {% if form.phone_number.errors %}
+                                    {{ form.phone_number(class="meta-input is-invalid") }}
+                                    {% for error in form.phone_number.errors %}
+                                        <div class="invalid-feedback">{{ error }}</div>
+                                    {% endfor %}
+                                {% else %}
+                                    {{ form.phone_number(class="meta-input", placeholder="Enter your phone number") }}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="meta-form-group mb-4">
+                        {{ form.ward_id.label(class="form-label") }}
+                        {% if form.ward_id.errors %}
+                            {{ form.ward_id(class="meta-select is-invalid") }}
+                            {% for error in form.ward_id.errors %}
+                                <div class="invalid-feedback">{{ error }}</div>
+                            {% endfor %}
+                        {% else %}
+                            {{ form.ward_id(class="meta-select") }}
+                        {% endif %}
+                    </div>
+
+                    <div class="d-grid">
+                        {{ form.submit(class="meta-button") }}
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="text-center">
+                    <p>Already have an account? <a href="{{ url_for('auth.login') }}" class="meta-link">Login here</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

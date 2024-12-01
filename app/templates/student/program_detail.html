@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}{{ program.name }} - Program Details{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="meta-card">
+        <!-- Program Header -->
+        <div class="d-flex justify-content-between align-items-start mb-4">
+            <div>
+                <h2 class="mb-2">{{ program.name }}</h2>
+                <div class="d-flex gap-2">
+                    {% if program.start_date <= now and program.end_date >= now %}
+                        <span class="badge bg-success">Active</span>
+                    {% elif program.start_date > now %}
+                        <span class="badge bg-warning">Upcoming</span>
+                    {% else %}
+                        <span class="badge bg-secondary">Closed</span>
+                    {% endif %}
+                    <span class="badge bg-primary">Ward {{ program.ward.name }}</span>
+                </div>
+            </div>
+            <h3 class="text-primary">KES {{ "{:,.2f}".format(program.amount) }}</h3>
+        </div>
+
+        <!-- Program Details -->
+        <div class="row mb-4">
+            <div class="col-md-8">
+                <div class="mb-4">
+                    <h4 class="mb-3">Description</h4>
+                    <p class="text-muted">{{ program.description }}</p>
+                </div>
+
+                <div class="mb-4">
+                    <h4 class="mb-3">Requirements</h4>
+                    <div class="meta-card bg-light">
+                        <ul class="list-unstyled mb-0">
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Must be a resident of {{ program.ward.name }}</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Must be currently enrolled in school</li>
+                            <li class="mb-2"><i class="fas fa-check-circle text-success me-2"></i>Must provide academic transcripts</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>Must demonstrate financial need</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="meta-card bg-light">
+                    <h4 class="mb-3">Important Dates</h4>
+                    <div class="mb-3">
+                        <p class="mb-1"><strong>Start Date:</strong></p>
+                        <p class="text-muted">{{ program.start_date.strftime('%B %d, %Y') }}</p>
+                    </div>
+                    <div>
+                        <p class="mb-1"><strong>Application Deadline:</strong></p>
+                        <p class="text-muted">{{ program.end_date.strftime('%B %d, %Y') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-between align-items-center">
+            <a href="{{ url_for('student.programs') }}" class="meta-button secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Programs
+            </a>
+            
+            {% if program.start_date <= now and program.end_date >= now %}
+                {% if has_applied %}
+                    <button class="meta-button" disabled>
+                        <i class="fas fa-check me-2"></i>Already Applied
+                    </button>
+                {% else %}
+                    <a href="{{ url_for('student.apply', program_id=program.id) }}" class="meta-button">
+                        <i class="fas fa-paper-plane me-2"></i>Apply Now
+                    </a>
+                {% endif %}
+            {% elif program.start_date > now %}
+                <span class="text-muted">
+                    <i class="fas fa-clock me-2"></i>Coming Soon
+                </span>
+            {% else %}
+                <span class="text-muted">
+                    <i class="fas fa-lock me-2"></i>Applications Closed
+                </span>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

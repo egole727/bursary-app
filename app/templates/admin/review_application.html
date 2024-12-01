@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block title %}Review Application{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Application Details -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="mb-0">Application Details</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <h5>Student Information</h5>
+                            <p class="mb-1"><strong>Name:</strong> {{ application.applicant.first_name }} {{ application.applicant.last_name }}</p>
+                            <p class="mb-1"><strong>Email:</strong> {{ application.applicant.email }}</p>
+                            <p class="mb-1"><strong>ID Number:</strong> {{ application.applicant.profile.id_number }}</p>
+                            <p class="mb-1"><strong>Phone:</strong> {{ application.applicant.profile.phone_number }}</p>
+                            <p class="mb-0"><strong>Ward:</strong> {{ application.applicant.profile.ward.name }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Program Information</h5>
+                            <p class="mb-1"><strong>Program:</strong> {{ application.program.name }}</p>
+                            <p class="mb-1"><strong>Amount:</strong> KES {{ "{:,.2f}".format(application.program.amount) }}</p>
+                            <p class="mb-1"><strong>Submission Date:</strong> {{ application.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                            <p class="mb-0"><strong>Status:</strong> 
+                                <span class="badge {% if application.status == 'PENDING' %}bg-warning
+                                                 {% elif application.status == 'APPROVED' %}bg-success
+                                                 {% elif application.status == 'REJECTED' %}bg-danger
+                                                 {% endif %}">
+                                    {{ application.status }}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <h5>Academic Information</h5>
+                    <div class="table-responsive mb-4">
+                        <table class="table table-bordered">
+                            <tr>
+                                <th>School Name</th>
+                                <td>{{ application.applicant.academic_info.school_name }}</td>
+                            </tr>
+                            <tr>
+                                <th>Current Grade/Level</th>
+                                <td>{{ application.applicant.academic_info.current_grade }}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                    {% if application.documents %}
+                    <h5>Submitted Documents</h5>
+                    <div class="list-group mb-4">
+                        {% for doc in application.documents %}
+                        <a href="{{ url_for('admin.download_document', document_id=doc.id) }}" class="list-group-item list-group-item-action">
+                            <i class="fas fa-file me-2"></i>
+                            {{ doc.name }}
+                            <small class="text-muted ms-2">({{ doc.file_type }})</small>
+                        </a>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Form -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Review Decision</h4>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status(class="form-select") }}
+                            {% for error in form.status.errors %}
+                                <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.comments.label(class="form-label") }}
+                            {{ form.comments(class="form-control", rows=5) }}
+                            {% for error in form.comments.errors %}
+                                <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+
+                        {{ form.submit(class="btn btn-primary w-100") }}
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

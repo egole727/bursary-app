@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row g-3">
+        <!-- Statistics Cards -->
+        <div class="col-12">
+            <div class="row g-3">
+                <div class="col-12 col-md-3">
+                    <div class="card bg-primary text-white h-100 stats-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Total Applications</h6>
+                                    <h2 class="display-4 mb-0">{{ stats.total_applications }}</h2>
+                                </div>
+                                <i class="fas fa-file-alt fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <div class="card bg-warning text-white h-100 stats-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Pending Review</h6>
+                                    <h2 class="display-4 mb-0">{{ stats.pending_applications }}</h2>
+                                </div>
+                                <i class="fas fa-clock fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <div class="card bg-success text-white h-100 stats-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Approved</h6>
+                                    <h2 class="display-4 mb-0">{{ stats.approved_applications }}</h2>
+                                </div>
+                                <i class="fas fa-check-circle fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12 col-md-3">
+                    <div class="card bg-danger text-white h-100 stats-card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="card-title mb-0">Rejected</h6>
+                                    <h2 class="display-4 mb-0">{{ stats.rejected_applications }}</h2>
+                                </div>
+                                <i class="fas fa-times-circle fa-3x opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Applications -->
+        <div class="col-12 col-lg-8">
+            <div class="card h-100">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-clock me-2"></i>Recent Applications</h5>
+                    <a href="{{ url_for('admin.applications') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-list me-1"></i>View All
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle applications-table">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Program</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for application in recent_applications %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar-sm bg-primary text-white rounded-circle me-2 d-flex align-items-center justify-content-center">
+                                                {{ application.applicant.first_name[0] }}{{ application.applicant.last_name[0] }}
+                                            </div>
+                                            <div>
+                                                <div class="fw-bold">{{ application.applicant.first_name }} {{ application.applicant.last_name }}</div>
+                                                <small class="text-muted">{{ application.applicant.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ application.program.name }}</td>
+                                    <td>KES {{ "{:,.2f}".format(application.amount) }}</td>
+                                    <td>
+                                        <span class="badge {% if application.status == 'PENDING' %}bg-warning
+                                                         {% elif application.status == 'APPROVED' %}bg-success
+                                                         {% elif application.status == 'REJECTED' %}bg-danger
+                                                         {% endif %}">
+                                            {{ application.status }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('admin.review_application', application_id=application.id) }}" 
+                                           class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye me-1"></i>Review
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center py-3">
+                                        <div class="text-muted">
+                                            <i class="fas fa-info-circle me-2"></i>No applications found
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="col-12 col-lg-4">
+            <div class="row g-3">
+                <!-- Active Programs -->
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h6 class="card-title mb-0">Active Programs</h6>
+                                <a href="{{ url_for('admin.programs') }}" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-plus me-1"></i>Manage
+                                </a>
+                            </div>
+                            <h2 class="display-4 mb-0">{{ stats.active_programs }}</h2>
+                            <div class="text-muted">Across {{ stats.total_wards }} wards</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Total Budget -->
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title mb-3">Budget Allocation</h6>
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <div>Total Budget</div>
+                                <div class="h5 mb-0">KES {{ "{:,.2f}".format(stats.total_budget) }}</div>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>Allocated</div>
+                                <div class="h5 mb-0">KES {{ "{:,.2f}".format(stats.allocated_budget) }}</div>
+                            </div>
+                            <div class="progress budget-progress mt-3">
+                                <div class="progress-bar bg-success" role="progressbar" 
+                                     style="width: {{ (stats.allocated_budget / stats.total_budget * 100) if stats.total_budget > 0 else 0 }}%">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title mb-3">Quick Actions</h6>
+                            <div class="d-grid gap-2 quick-actions">
+                                <a href="{{ url_for('admin.new_program') }}" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>New Program
+                                </a>
+                                <a href="{{ url_for('admin.applications', status='PENDING') }}" class="btn btn-warning">
+                                    <i class="fas fa-clock me-2"></i>Review Applications
+                                </a>
+                                <a href="{{ url_for('admin.wards') }}" class="btn btn-info">
+                                    <i class="fas fa-map-marker-alt me-2"></i>Manage Wards
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+<script>
+    // Add any dashboard-specific JavaScript here
+</script>
+{% endblock %}
