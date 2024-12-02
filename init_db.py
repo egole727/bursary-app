@@ -32,7 +32,7 @@ def init_db():
         
         db.session.flush()  # Flush to get user IDs
 
-        # Create wards with descriptions (matching WardForm)
+        # Create wards with descriptions
         wards = [
             Ward(
                 name='Westlands',
@@ -60,7 +60,7 @@ def init_db():
         
         db.session.flush()
 
-        # Create student profile (matching ProfileForm)
+        # Create student profile
         profile = Profile(
             user_id=student.id,
             first_name='John',
@@ -68,11 +68,12 @@ def init_db():
             date_of_birth=datetime(2000, 1, 1),
             gender='M',
             phone_number='0712345678',
-            ward_id=wards[0].id
+            ward_id=wards[0].id,
+            id_number='12345678'  # Added id_number field
         )
         db.session.add(profile)
 
-        # Create academic info (matching AcademicInfoForm)
+        # Create academic info
         academic_info = AcademicInfo(
             user_id=student.id,
             institution='University of Nairobi',
@@ -82,7 +83,7 @@ def init_db():
         )
         db.session.add(academic_info)
 
-        # Create bursary programs (matching BursaryProgramForm)
+        # Create bursary programs
         programs = [
             BursaryProgram(
                 name='Secondary School Bursary 2024',
@@ -102,13 +103,13 @@ def init_db():
                 end_date=datetime.now() + timedelta(days=45),
                 requirements='1. Must be a resident of the ward\n2. Must be enrolled in a recognized university\n3. Must demonstrate financial need',
                 status='ACTIVE',
-                ward_id=wards[1].id
+                ward_id=None  # This program is available to all wards
             )
         ]
         for program in programs:
             db.session.add(program)
 
-        # Create a sample application (matching ApplicationForm)
+        # Create a sample application
         application = Application(
             student_id=student.id,
             ward_id=wards[0].id,

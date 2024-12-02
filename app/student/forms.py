@@ -11,6 +11,7 @@ class ProfileForm(FlaskForm):
     gender = SelectField('Gender', choices=[('M', 'Male'), ('F', 'Female'), ('O', 'Other')])
     phone_number = StringField('Phone Number', validators=[DataRequired(), Length(max=15)])
     ward_id = SelectField('Ward', coerce=int, validators=[DataRequired()])
+    id_number = StringField('ID Number', validators=[DataRequired(), Length(max=15)])
 
     def __init__(self, *args, **kwargs):
         super(ProfileForm, self).__init__(*args, **kwargs)
