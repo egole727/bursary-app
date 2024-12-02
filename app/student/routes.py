@@ -151,9 +151,9 @@ def profile():
 def apply(program_id):
     # Check if student has completed their profile
     profile = Profile.query.filter_by(user_id=current_user.id).first()
-    academic = AcademicInfo.query.filter_by(user_id=current_user.id).first()
+    #academic = AcademicInfo.query.filter_by(user_id=current_user.id).first()
     
-    if not profile or not academic:
+    if not profile:
         flash('Please complete your profile and academic information before applying for bursaries.', 'warning')
         return redirect(url_for('student.profile'))
 
