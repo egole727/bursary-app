@@ -4,6 +4,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, login_manager
 
 class User(UserMixin, db.Model):
+    __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256))  
@@ -37,6 +38,7 @@ def load_user(id):
     return User.query.get(int(id))
 
 class Profile(db.Model):
+    __tablename__ = 'profile'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', name='fk_profile_user'), unique=True)
     first_name = db.Column(db.String(50))
@@ -50,6 +52,7 @@ class Profile(db.Model):
                          name='uq_profile_id_number')
 
 class Ward(db.Model):
+    __tablename__ = 'ward'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     description = db.Column(db.String(500))
@@ -63,6 +66,7 @@ class Ward(db.Model):
     applications = db.relationship('Application', backref='ward', lazy='dynamic')
 
 class BursaryProgram(db.Model):
+    __tablename__ = 'bursary_program'
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
@@ -77,6 +81,7 @@ class BursaryProgram(db.Model):
     applications = db.relationship('Application', backref='program', lazy='dynamic')
 
 class Application(db.Model):
+    __tablename__ = 'application'
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ward_id = db.Column(db.Integer, db.ForeignKey('ward.id'), nullable=False)
@@ -92,6 +97,7 @@ class Application(db.Model):
     timeline = db.relationship('ApplicationTimeline', backref='application', lazy='dynamic')
 
 class Document(db.Model):
+    __tablename__ = 'document'
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.String(50), nullable=False)
     url = db.Column(db.String(500), nullable=False)     # original filename
@@ -99,6 +105,7 @@ class Document(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class AcademicInfo(db.Model):
+    __tablename__ = 'academic_info'
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True)
     institution = db.Column(db.String(200), nullable=False)
@@ -109,6 +116,7 @@ class AcademicInfo(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 class ApplicationTimeline(db.Model):
+    __tablename__ = 'application_timeline'
     id = db.Column(db.Integer, primary_key=True)
     application_id = db.Column(db.Integer, db.ForeignKey('application.id'), nullable=False)
     status = db.Column(db.String(20), nullable=False)
