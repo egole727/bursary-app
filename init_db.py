@@ -1,6 +1,8 @@
 from app import create_app, db
 from app.models import User, Profile, Ward, BursaryProgram, Application, Document, ApplicationTimeline, AcademicInfo
 from datetime import datetime, timedelta
+from dotenv import load_dotenv
+load_dotenv() 
 
 app = create_app()
 

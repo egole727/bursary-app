@@ -1,8 +1,12 @@
+import os
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
+from dotenv import load_dotenv
 from config import Config
+
+load_dotenv()  # Load environment variables
 
 db = SQLAlchemy()
 login_manager = LoginManager()
