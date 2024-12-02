@@ -66,44 +66,81 @@ def dashboard():
 @login_required
 @student_required
 def profile():
-    profile_form = ProfileForm(obj=current_user.profile)
-    academic_form = AcademicInfoForm(obj=current_user.academic_info)
-    
+    # Initialize forms
+    profile_form = ProfileForm()
+    academic_form = AcademicInfoForm()
+
+    # Get or create profile and academic info
+    profile = Profile.query.filter_by(user_id=current_user.id).first()
+    academic = AcademicInfo.query.filter_by(user_id=current_user.id).first()
+
+    if request.method == 'GET':
+        if profile:
+            # Populate profile form with existing data
+            profile_form.first_name.data = profile.first_name
+            profile_form.last_name.data = profile.last_name
+            profile_form.phone_number.data = profile.phone_number
+            profile_form.date_of_birth.data = profile.date_of_birth
+            profile_form.gender.data = profile.gender
+            profile_form.ward_id.data = profile.ward_id
+            profile_form.id_number.data = profile.id_number
+
+        if academic:
+            # Populate academic form with existing data
+            academic_form.institution.data = academic.institution
+            academic_form.course.data = academic.course
+            academic_form.year_of_study.data = academic.year_of_study
+            academic_form.student_id.data = academic.student_id
+
     if request.method == 'POST':
-        if 'submit_profile' in request.form and profile_form.validate_on_submit():
+        if 'submit_profile' in request.form and profile_form.validate():
             try:
-                if current_user.profile is None:
-                    profile = Profile()
-                    profile_form.populate_obj(profile)
-                    current_user.profile = profile
-                else:
-                    profile_form.populate_obj(current_user.profile)
-                
+                if not profile:
+                    profile = Profile(user_id=current_user.id)
+
+                # Update profile data
+                profile.first_name = profile_form.first_name.data
+                profile.last_name = profile_form.last_name.data
+                profile.phone_number = profile_form.phone_number.data
+                profile.date_of_birth = profile_form.date_of_birth.data
+                profile.gender = profile_form.gender.data
+                profile.ward_id = profile_form.ward_id.data
+                profile.id_number = profile_form.id_number.data
+
+                db.session.add(profile)
                 db.session.commit()
-                flash('Profile updated successfully', 'success')
-                return redirect(url_for('student.profile'))
+                flash('Profile updated successfully!', 'success')
+
             except Exception as e:
                 db.session.rollback()
-                flash('An error occurred while updating your profile. Please try again.', 'error')
+                flash(f'Error updating profile: {str(e)}', 'error')
                 print(f"Error updating profile: {str(e)}")
-        
-        if 'submit_academic' in request.form and academic_form.validate_on_submit():
+
+        if 'submit_academic' in request.form and academic_form.validate():
             try:
-                if current_user.academic_info is None:
-                    academic_info = AcademicInfo()
-                    academic_form.populate_obj(academic_info)
-                    current_user.academic_info = academic_info
-                else:
-                    academic_form.populate_obj(current_user.academic_info)
-                
+                if not academic:
+                    academic = AcademicInfo(user_id=current_user.id)
+
+                # Update academic data
+                academic.institution = academic_form.institution.data
+                academic.course = academic_form.course.data
+                academic.year_of_study = academic_form.year_of_study.data
+                academic.student_id = academic_form.student_id.data
+
+                db.session.add(academic)
                 db.session.commit()
-                flash('Academic information updated successfully', 'success')
-                return redirect(url_for('student.profile'))
+                flash('Academic information updated successfully!', 'success')
+
             except Exception as e:
                 db.session.rollback()
-                flash('An error occurred while updating your academic information. Please try again.', 'error')
+                flash(f'Error updating academic info: {str(e)}', 'error')
                 print(f"Error updating academic info: {str(e)}")
-    
+
+        # Check if both profile and academic info are complete
+        if profile and academic:
+            flash('Profile completed successfully!', 'success')
+            return redirect(url_for('student.dashboard'))
+
     return render_template('student/profile.html',
                          profile_form=profile_form,
                          academic_form=academic_form)
@@ -113,8 +150,11 @@ def profile():
 @student_required
 def apply(program_id):
     # Check if student has completed their profile
-    if not current_user.profile or not current_user.academic_info:
-        flash('Please complete your profile before applying for bursaries.', 'warning')
+    profile = Profile.query.filter_by(user_id=current_user.id).first()
+    academic = AcademicInfo.query.filter_by(user_id=current_user.id).first()
+    
+    if not profile or not academic:
+        flash('Please complete your profile and academic information before applying for bursaries.', 'warning')
         return redirect(url_for('student.profile'))
 
     program = BursaryProgram.query.get_or_404(program_id)
@@ -137,43 +177,53 @@ def apply(program_id):
     form = ApplicationForm()
     if form.validate_on_submit():
         try:
-            # Create uploads directory if it doesn't exist
-            upload_folder = current_app.config['UPLOAD_FOLDER']
-            os.makedirs(upload_folder, exist_ok=True)
+            # Get the student's ward_id from their profile
+            student_ward_id = profile.ward_id
             
-            # Always use student's ward_id for the application
+            if not student_ward_id:
+                flash('Unable to determine your ward. Please update your profile.', 'error')
+                return redirect(url_for('student.profile'))
+
             application = Application(
                 student_id=current_user.id,
                 program_id=program_id,
-                ward_id=current_user.profile.ward_id,  # Use student's ward_id
+                ward_id=student_ward_id,  # Use the student's ward_id
                 amount=form.amount.data,
                 reason=form.reason.data,
-                status='PENDING'
-            )
-            
-            # Handle document uploads
-            uploaded_files = request.files.getlist('documents')
-            for file in uploaded_files:
-                if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
-                    filepath = os.path.join(upload_folder, filename)
-                    file.save(filepath)
-                    
-                    document = Document(
-                        type='SUPPORTING_DOCUMENT',
-                        url=filename,
-                        application=application
-                    )
-                    db.session.add(document)
-            
-            # Create timeline entry
-            timeline = ApplicationTimeline(
-                application=application,
-                status='APPLICATION_SUBMITTED',
-                comment='Application submitted for review'
+                status='PENDING',
+                created_at=datetime.utcnow(),
+                updated_at=datetime.utcnow()
             )
             
             db.session.add(application)
+            db.session.flush()  # Get the application ID
+            
+            # Handle document uploads if any
+            if form.documents.data:
+                upload_folder = current_app.config['UPLOAD_FOLDER']
+                os.makedirs(upload_folder, exist_ok=True)
+                
+                for file in form.documents.data:
+                    if file and allowed_file(file.filename):
+                        filename = secure_filename(file.filename)
+                        filepath = os.path.join(upload_folder, filename)
+                        file.save(filepath)
+                        
+                        document = Document(
+                            application_id=application.id,
+                            type='SUPPORTING_DOCUMENT',
+                            url=filename
+                        )
+                        db.session.add(document)
+            
+            # Create timeline entry
+            timeline = ApplicationTimeline(
+                application_id=application.id,
+                status='APPLICATION_SUBMITTED',
+                comment='Application submitted for review',
+                created_at=datetime.utcnow()
+            )
+            
             db.session.add(timeline)
             db.session.commit()
             

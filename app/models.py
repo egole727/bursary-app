@@ -38,13 +38,16 @@ def load_user(id):
 
 class Profile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id', name='fk_profile_user'), unique=True)
     first_name = db.Column(db.String(50))
     last_name = db.Column(db.String(50))
     phone_number = db.Column(db.String(20))
     date_of_birth = db.Column(db.Date)
     gender = db.Column(db.String(10))
-    ward_id = db.Column(db.Integer, db.ForeignKey('ward.id'))
+    ward_id = db.Column(db.Integer, db.ForeignKey('ward.id', name='fk_profile_ward'))
+    id_number = db.Column(db.String(20), unique=True, 
+                         nullable=False,
+                         name='uq_profile_id_number')
 
 class Ward(db.Model):
     id = db.Column(db.Integer, primary_key=True)

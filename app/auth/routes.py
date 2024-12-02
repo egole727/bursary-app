@@ -5,6 +5,7 @@ from app import db
 from app.auth import bp
 from app.auth.forms import LoginForm, RegistrationForm
 from app.models import User, Profile, Ward
+from sqlalchemy.exc import IntegrityError
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -44,22 +45,27 @@ def register():
         user = User(
             email=form.email.data,
             first_name=form.first_name.data,
-            last_name=form.last_name.data,
-            role='STUDENT'
+            last_name=form.last_name.data
         )
         user.set_password(form.password.data)
         
         profile = Profile(
-            id_number=form.id_number.data,
-            phone_number=form.phone_number.data,
-            ward_id=form.ward_id.data
+            user=user,
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            id_number=form.id_number.data
         )
         
-        user.profile = profile
         db.session.add(user)
-        db.session.commit()
+        db.session.add(profile)
         
-        flash('Congratulations, you are now a registered user!', 'success')
-        return redirect(url_for('auth.login'))
-    
+        try:
+            db.session.commit()
+            flash('Congratulations, you are now a registered user!', 'success')
+            return redirect(url_for('auth.login'))
+        except IntegrityError:
+            db.session.rollback()
+            flash('Error: Email or ID number already registered.', 'danger')
+            return redirect(url_for('auth.register'))
+            
     return render_template('auth/register.html', title='Register', form=form)

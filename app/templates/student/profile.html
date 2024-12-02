@@ -16,27 +16,52 @@
                 <div class="row g-3">
                     <div class="col-md-6">
                         {{ profile_form.first_name.label(class="form-label") }}
-                        {{ profile_form.first_name(class="form-control") }}
+                        {{ profile_form.first_name(class="form-control" + (" is-invalid" if profile_form.first_name.errors else "")) }}
+                        {% for error in profile_form.first_name.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ profile_form.last_name.label(class="form-label") }}
-                        {{ profile_form.last_name(class="form-control") }}
+                        {{ profile_form.last_name(class="form-control" + (" is-invalid" if profile_form.last_name.errors else "")) }}
+                        {% for error in profile_form.last_name.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ profile_form.date_of_birth.label(class="form-label") }}
                         {{ profile_form.date_of_birth(class="form-control", type="date") }}
+                        {% for error in profile_form.date_of_birth.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ profile_form.gender.label(class="form-label") }}
                         {{ profile_form.gender(class="form-select") }}
+                        {% for error in profile_form.gender.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ profile_form.phone_number.label(class="form-label") }}
                         {{ profile_form.phone_number(class="form-control") }}
+                        {% for error in profile_form.phone_number.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        {{ profile_form.id_number.label(class="form-label") }}
+                        {{ profile_form.id_number(class="form-control") }}
+                        {% for error in profile_form.id_number.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ profile_form.ward_id.label(class="form-label") }}
                         {{ profile_form.ward_id(class="form-select") }}
+                        {% for error in profile_form.ward_id.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
                     </div>
                 </div>
                 
@@ -62,18 +87,30 @@
                     <div class="col-md-6">
                         {{ academic_form.institution.label(class="form-label") }}
                         {{ academic_form.institution(class="form-control") }}
+                        {% for error in academic_form.institution.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ academic_form.course.label(class="form-label") }}
                         {{ academic_form.course(class="form-control") }}
+                        {% for error in academic_form.course.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ academic_form.year_of_study.label(class="form-label") }}
                         {{ academic_form.year_of_study(class="form-select") }}
+                        {% for error in academic_form.year_of_study.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
                     </div>
                     <div class="col-md-6">
                         {{ academic_form.student_id.label(class="form-label") }}
                         {{ academic_form.student_id(class="form-control") }}
+                        {% for error in academic_form.student_id.errors %}
+                            <div class="invalid-feedback">{{ error }}</div>
+                        {% endfor %}
                     </div>
                 </div>
                 

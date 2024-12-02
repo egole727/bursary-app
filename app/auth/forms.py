@@ -10,13 +10,13 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Sign In')
 
 class RegistrationForm(FlaskForm):
-    first_name = StringField('First Name', validators=[DataRequired(), Length(max=64)])
-    last_name = StringField('Last Name', validators=[DataRequired(), Length(max=64)])
-    email = StringField('Email', validators=[DataRequired(), Email(), Length(max=120)])
-    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
-    password2 = PasswordField(
-        'Repeat Password', validators=[DataRequired(), EqualTo('password')])
-    id_number = StringField('ID Number', validators=[DataRequired(), Length(max=20)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    password2 = PasswordField('Repeat Password', 
+        validators=[DataRequired(), EqualTo('password')])
+    first_name = StringField('First Name', validators=[DataRequired()])
+    last_name = StringField('Last Name', validators=[DataRequired()])
+    id_number = StringField('Registration Number', validators=[DataRequired()])
     phone_number = StringField('Phone Number', validators=[DataRequired(), Length(max=20)])
     ward_id = SelectField('Ward', coerce=int, validators=[DataRequired()])
     submit = SubmitField('Register')
