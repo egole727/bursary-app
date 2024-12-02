@@ -31,18 +31,24 @@ def dashboard():
     pending_applications = sum(1 for app in applications if app.status == 'PENDING')
     rejected_applications = sum(1 for app in applications if app.status == 'REJECTED')
     
-    # Get available bursary programs for student's ward
+    # Get available bursary programs for student's ward AND programs available to all wards
     current_date = datetime.utcnow()
     available_programs = BursaryProgram.query.filter(
-        BursaryProgram.ward_id == current_user.profile.ward_id,
+        (
+            (BursaryProgram.ward_id == current_user.profile.ward_id) |
+            (BursaryProgram.ward_id == None)  # Programs available to all wards
+        ),
         BursaryProgram.status == 'ACTIVE',
         BursaryProgram.start_date <= current_date,
         BursaryProgram.end_date >= current_date
     ).order_by(BursaryProgram.end_date.asc()).all()
     
-    # Get upcoming programs
+    # Get upcoming programs (including those available to all wards)
     upcoming_programs = BursaryProgram.query.filter(
-        BursaryProgram.ward_id == current_user.profile.ward_id,
+        (
+            (BursaryProgram.ward_id == current_user.profile.ward_id) |
+            (BursaryProgram.ward_id == None)  # Programs available to all wards
+        ),
         BursaryProgram.status == 'ACTIVE',
         BursaryProgram.start_date > current_date
     ).order_by(BursaryProgram.start_date.asc()).limit(5).all()
@@ -67,16 +73,11 @@ def profile():
         if 'submit_profile' in request.form and profile_form.validate_on_submit():
             try:
                 if current_user.profile is None:
-                    profile = Profile(user_id=current_user.id)
-                    db.session.add(profile)
+                    profile = Profile()
+                    profile_form.populate_obj(profile)
                     current_user.profile = profile
-                
-                current_user.profile.first_name = profile_form.first_name.data
-                current_user.profile.last_name = profile_form.last_name.data
-                current_user.profile.date_of_birth = profile_form.date_of_birth.data
-                current_user.profile.gender = profile_form.gender.data
-                current_user.profile.phone_number = profile_form.phone_number.data
-                current_user.profile.ward_id = profile_form.ward_id.data
+                else:
+                    profile_form.populate_obj(current_user.profile)
                 
                 db.session.commit()
                 flash('Profile updated successfully', 'success')
@@ -89,14 +90,11 @@ def profile():
         if 'submit_academic' in request.form and academic_form.validate_on_submit():
             try:
                 if current_user.academic_info is None:
-                    academic_info = AcademicInfo(user_id=current_user.id)
-                    db.session.add(academic_info)
+                    academic_info = AcademicInfo()
+                    academic_form.populate_obj(academic_info)
                     current_user.academic_info = academic_info
-                
-                current_user.academic_info.institution = academic_form.institution.data
-                current_user.academic_info.course = academic_form.course.data
-                current_user.academic_info.year_of_study = academic_form.year_of_study.data
-                current_user.academic_info.student_id = academic_form.student_id.data
+                else:
+                    academic_form.populate_obj(current_user.academic_info)
                 
                 db.session.commit()
                 flash('Academic information updated successfully', 'success')
@@ -143,10 +141,11 @@ def apply(program_id):
             upload_folder = current_app.config['UPLOAD_FOLDER']
             os.makedirs(upload_folder, exist_ok=True)
             
+            # Always use student's ward_id for the application
             application = Application(
                 student_id=current_user.id,
                 program_id=program_id,
-                ward_id=program.ward_id,
+                ward_id=current_user.profile.ward_id,  # Use student's ward_id
                 amount=form.amount.data,
                 reason=form.reason.data,
                 status='PENDING'

@@ -67,7 +67,7 @@ class BursaryProgram(db.Model):
     start_date = db.Column(db.DateTime, nullable=False)
     end_date = db.Column(db.DateTime, nullable=False)
     requirements = db.Column(db.Text)
-    ward_id = db.Column(db.Integer, db.ForeignKey('ward.id'))
+    ward_id = db.Column(db.Integer, db.ForeignKey('ward.id'), nullable=True)
     status = db.Column(db.String(20), default='ACTIVE')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)

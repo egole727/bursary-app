@@ -42,7 +42,13 @@
                         <tr>
                             <td>{{ program.name }}</td>
                             <td>KES {{ "{:,.2f}".format(program.amount) }}</td>
-                            <td>{{ program.ward.name }}</td>
+                            <td>
+                                {% if program.ward_id %}
+                                    {{ program.ward.name }}
+                                {% else %}
+                                    <span class="badge bg-info">All Wards</span>
+                                {% endif %}
+                            </td>
                             <td>{{ program.start_date.strftime('%Y-%m-%d') }}</td>
                             <td>{{ program.end_date.strftime('%Y-%m-%d') }}</td>
                             <td>
