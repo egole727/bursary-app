@@ -67,7 +67,6 @@ def programs():
 @admin_required
 def new_program():
     form = BursaryProgramForm()
-    form.ward_id.choices = [(w.id, w.name) for w in Ward.query.order_by(Ward.name).all()]
     
     if form.validate_on_submit():
         program = BursaryProgram(
@@ -76,7 +75,7 @@ def new_program():
             start_date=form.start_date.data,
             end_date=form.end_date.data,
             amount=form.amount.data,
-            ward_id=form.ward_id.data
+            ward_id=None if form.ward_id.data == -1 else form.ward_id.data
         )
         db.session.add(program)
         db.session.commit()
@@ -91,7 +90,6 @@ def new_program():
 def edit_program(program_id):
     program = BursaryProgram.query.get_or_404(program_id)
     form = BursaryProgramForm(obj=program)
-    form.ward_id.choices = [(w.id, w.name) for w in Ward.query.order_by(Ward.name).all()]
     
     if form.validate_on_submit():
         program.name = form.name.data
@@ -99,10 +97,13 @@ def edit_program(program_id):
         program.start_date = form.start_date.data
         program.end_date = form.end_date.data
         program.amount = form.amount.data
-        program.ward_id = form.ward_id.data
+        program.ward_id = None if form.ward_id.data == -1 else form.ward_id.data
         db.session.commit()
         flash('Bursary program has been updated.', 'success')
         return redirect(url_for('admin.programs'))
+    
+    if program.ward_id is None:
+        form.ward_id.data = -1
     
     return render_template('admin/program_form.html', form=form, program=program)
 

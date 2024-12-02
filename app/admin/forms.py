@@ -1,17 +1,24 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from wtforms import StringField, TextAreaField, DecimalField, DateField, SelectField, SubmitField
-from wtforms.validators import DataRequired, Length, NumberRange, ValidationError
+from wtforms.validators import DataRequired, Length, NumberRange, ValidationError, Optional
 from datetime import date, datetime
+from app.models import Ward
 
 class BursaryProgramForm(FlaskForm):
-    name = StringField('Program Name', validators=[DataRequired(), Length(max=100)])
-    description = TextAreaField('Description', validators=[DataRequired(), Length(max=500)])
-    start_date = DateField('Start Date', validators=[DataRequired()], format='%Y-%m-%d')
-    end_date = DateField('End Date', validators=[DataRequired()], format='%Y-%m-%d')
+    name = StringField('Program Name', validators=[DataRequired(), Length(max=200)])
+    description = TextAreaField('Description', validators=[DataRequired()])
+    start_date = DateField('Start Date', validators=[DataRequired()])
+    end_date = DateField('End Date', validators=[DataRequired()])
     amount = DecimalField('Amount (KES)', validators=[DataRequired(), NumberRange(min=0)])
-    ward_id = SelectField('Ward', validators=[DataRequired()], coerce=int)
+    ward_id = SelectField('Ward', coerce=int, validators=[Optional()])
     submit = SubmitField('Submit')
+
+    def __init__(self, *args, **kwargs):
+        super(BursaryProgramForm, self).__init__(*args, **kwargs)
+        self.ward_id.choices = [(-1, 'All Wards')] + [
+            (ward.id, ward.name) for ward in Ward.query.order_by(Ward.name).all()
+        ]
 
     def validate_start_date(self, field):
         if field.data < datetime.now().date():
