@@ -7,6 +7,9 @@
     
     <title>{% block title %}Bursary Management System{% endblock %}</title>
     
+    <!-- Poppins Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <!-- Meta Design System -->
     <link href="{{ url_for('static', filename='styles/meta-design.css') }}" rel="stylesheet">
     
@@ -25,44 +28,90 @@
                 <i class="fas fa-graduation-cap text-primary"></i>
                 <span class="ms-2 fw-bold">Bursary System</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
-                    data-bs-target="#navbarNav" aria-controls="navbarNav" 
-                    aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'main.index' %}active{% endif %}" 
-                           href="{{ url_for('main.index') }}">
-                           <i class="fas fa-home"></i> Home
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'student.programs' %}active{% endif %}" 
-                           href="{{ url_for('student.programs') }}">
-                           <i class="fas fa-scroll"></i> Programs
-                        </a>
-                    </li>
-                    {% if not current_user.is_authenticated %}
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'auth.login' %}active{% endif %}" 
-                           href="{{ url_for('auth.login') }}">
-                           <i class="fas fa-sign-in-alt"></i> Login
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="meta-button nav-link {% if request.endpoint == 'auth.register' %}active{% endif %}" 
-                           href="{{ url_for('auth.register') }}">
-                           <i class="fas fa-user-plus"></i> Register
-                        </a>
-                    </li>
+                    {% if current_user.is_authenticated %}
+                        {% if current_user.is_admin %}
+                            <!-- Admin Navigation -->
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                                    <i class="fas fa-chart-line me-1"></i>Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.programs') }}">
+                                    <i class="fas fa-graduation-cap me-1"></i>Programs
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.applications') }}">
+                                    <i class="fas fa-file-alt me-1"></i>Applications
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('admin.reports') }}">
+                                    <i class="fas fa-chart-bar me-1"></i>Reports
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a>
+                            </li>
+                        {% else %}
+                            <!-- Student Navigation -->
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('student.dashboard') }}">
+                                    <i class="fas fa-home me-1"></i>Dashboard
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('student.programs') }}">
+                                    <i class="fas fa-scroll me-1"></i>Programs
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ url_for('student.applications') }}">
+                                    <i class="fas fa-file-alt me-1"></i>My Applications
+                                </a>
+                            </li>
+                            <!-- Student Dropdown -->
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="studentDropdown" role="button" 
+                                   data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-user-circle me-1"></i>{{ current_user.first_name }}
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="studentDropdown">
+                                    <li>
+                                        <a class="dropdown-item" href="{{ url_for('student.profile') }}">
+                                            <i class="fas fa-user me-2"></i>Profile
+                                        </a>
+                                    </li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li>
+                                        <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                        </a>
+                                    </li>
+                                </ul>
+                            </li>
+                        {% endif %}
                     {% else %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('auth.logout') }}">
-                            <i class="fas fa-sign-out-alt"></i> Logout
-                        </a>
-                    </li>
+                        <!-- Guest Navigation -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ url_for('auth.login') }}">
+                                <i class="fas fa-sign-in-alt me-1"></i>Login
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-primary text-white px-3 ms-2" href="{{ url_for('auth.register') }}">
+                                <i class="fas fa-user-plus me-1"></i>Register
+                            </a>
+                        </li>
                     {% endif %}
                 </ul>
             </div>

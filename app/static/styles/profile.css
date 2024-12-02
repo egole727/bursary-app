@@ -1,0 +1,49 @@
+/* Profile Styles */
+.avatar-circle {
+    width: 120px;
+    height: 120px;
+    background-color: #f8f9fa;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+}
+
+.form-label {
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.form-control-static {
+    padding: 0.5rem 0;
+    margin-bottom: 0;
+    font-size: 1rem;
+    border-bottom: 1px solid var(--meta-border);
+}
+
+.card {
+    border: none;
+    box-shadow: var(--shadow-md);
+}
+
+.card-header {
+    border-bottom: none;
+    padding: 1.25rem;
+}
+
+.badge {
+    padding: 0.5em 1em;
+    font-weight: 500;
+}
+
+@media (max-width: 768px) {
+    .avatar-circle {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .avatar-circle i {
+        font-size: 3em !important;
+    }
+} 

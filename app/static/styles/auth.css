@@ -1,0 +1,133 @@
+/* Auth Pages Container */
+.auth-container {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e4e8eb 100%);
+    padding: 2rem 0;
+}
+
+/* Auth Card */
+.auth-card {
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    padding: 2.5rem;
+    max-width: 500px;
+    margin: 2rem auto;
+}
+
+/* Auth Header */
+.auth-header {
+    text-align: center;
+    margin-bottom: 2.5rem;
+}
+
+.auth-header h2 {
+    color: var(--meta-primary);
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.auth-header p {
+    color: var(--meta-text-secondary);
+    font-size: 0.95rem;
+}
+
+/* Form Styling */
+.auth-form .form-group {
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.auth-form .form-control {
+    padding: 0.8rem 1rem;
+    border: 2px solid #e1e5ea;
+    border-radius: 12px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.auth-form .form-control:focus {
+    border-color: var(--meta-primary);
+    box-shadow: 0 0 0 4px rgba(8, 102, 255, 0.1);
+}
+
+.auth-form label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    color: var(--meta-text-primary);
+}
+
+/* Submit Button */
+.auth-form .btn-submit {
+    width: 100%;
+    padding: 0.8rem;
+    background: var(--meta-primary);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-weight: 600;
+    font-size: 1rem;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+}
+
+.auth-form .btn-submit:hover {
+    background: #0747A6;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(8, 102, 255, 0.2);
+}
+
+/* Checkbox Styling */
+.auth-form .form-check {
+    margin: 1rem 0;
+}
+
+.auth-form .form-check-input {
+    width: 1.2em;
+    height: 1.2em;
+    margin-top: 0.2em;
+    border: 2px solid #e1e5ea;
+    border-radius: 4px;
+}
+
+.auth-form .form-check-input:checked {
+    background-color: var(--meta-primary);
+    border-color: var(--meta-primary);
+}
+
+/* Auth Links */
+.auth-links {
+    text-align: center;
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid #e1e5ea;
+}
+
+.auth-links a {
+    color: var(--meta-primary);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.auth-links a:hover {
+    text-decoration: underline;
+}
+
+/* Validation Styling */
+.auth-form .invalid-feedback {
+    font-size: 0.85rem;
+    color: var(--meta-error);
+    margin-top: 0.5rem;
+}
+
+.auth-form .form-control.is-invalid {
+    border-color: var(--meta-error);
+}
+
+/* Responsive Design */
+@media (max-width: 576px) {
+    .auth-card {
+        margin: 1rem;
+        padding: 1.5rem;
+    }
+} 

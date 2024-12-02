@@ -119,3 +119,88 @@ h1, h2, h3, h4, h5, h6 {
         margin-bottom: 0.5rem;
     }
 }
+
+/* Navigation Enhancements */
+.navbar {
+    padding: 1rem 0;
+}
+
+.navbar-brand {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+}
+
+.nav-link {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    color: var(--meta-text-secondary) !important;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--meta-primary) !important;
+}
+
+.nav-link i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Active Navigation Link */
+.nav-link.active {
+    color: var(--meta-primary) !important;
+    background-color: rgba(8, 102, 255, 0.1);
+    border-radius: 8px;
+}
+
+/* User Dropdown */
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    padding: 0.5rem;
+}
+
+.dropdown-item {
+    font-family: 'Poppins', sans-serif;
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background-color: var(--meta-hover);
+}
+
+.dropdown-item i {
+    width: 20px;
+    text-align: center;
+}
+
+/* Register Button in Nav */
+.nav-link.btn-primary {
+    padding: 0.5rem 1.25rem !important;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.nav-link.btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(8, 102, 255, 0.2);
+}
+
+/* Mobile Navigation */
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        padding: 1rem 0;
+    }
+    
+    .nav-link {
+        padding: 0.75rem 1rem !important;
+    }
+    
+    .nav-link.btn-primary {
+        margin: 0.5rem 0;
+    }
+}

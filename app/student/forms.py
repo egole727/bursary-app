@@ -5,11 +5,11 @@ from wtforms.validators import DataRequired, Length, NumberRange, Optional
 from app.models import Ward
 
 class ProfileForm(FlaskForm):
-    id_number = StringField('ID Number', validators=[DataRequired(), Length(max=20)])
-    phone_number = StringField('Phone Number', validators=[DataRequired(), Length(max=20)])
+    first_name = StringField('First Name', validators=[DataRequired(), Length(max=50)])
+    last_name = StringField('Last Name', validators=[DataRequired(), Length(max=50)])
     date_of_birth = DateField('Date of Birth', validators=[DataRequired()])
-    gender = SelectField('Gender', choices=[('', 'Select Gender'), ('M', 'Male'), ('F', 'Female')], validators=[DataRequired()])
-    address = StringField('Address', validators=[DataRequired(), Length(max=200)])
+    gender = SelectField('Gender', choices=[('M', 'Male'), ('F', 'Female'), ('O', 'Other')])
+    phone_number = StringField('Phone Number', validators=[DataRequired(), Length(max=15)])
     ward_id = SelectField('Ward', coerce=int, validators=[DataRequired()])
 
     def __init__(self, *args, **kwargs):
@@ -21,6 +21,14 @@ class ProfileForm(FlaskForm):
 class AcademicInfoForm(FlaskForm):
     school_name = StringField('School Name', validators=[DataRequired(), Length(max=200)])
     current_grade = StringField('Current Grade/Year', validators=[DataRequired(), Length(max=50)])
+    institution = StringField('Institution Name', validators=[DataRequired(), Length(max=100)])
+    course = StringField('Course Name', validators=[DataRequired(), Length(max=100)])
+    year_of_study = SelectField('Year of Study', 
+                              choices=[(1, '1st Year'), (2, '2nd Year'), 
+                                     (3, '3rd Year'), (4, '4th Year'),
+                                     (5, '5th Year'), (6, '6th Year')],
+                              coerce=int)
+    student_id = StringField('Student ID', validators=[DataRequired(), Length(max=20)])
 
 class ApplicationForm(FlaskForm):
     amount = DecimalField('Amount Requested (KES)', 

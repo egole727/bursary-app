@@ -1,0 +1,143 @@
+/* Index Page Styles */
+body {
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Hero Section */
+.hero-section {
+    padding: 6rem 0 4rem;
+    background: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9));
+}
+
+.hero-section h1 {
+    font-weight: 700;
+    font-size: 3.5rem;
+    line-height: 1.2;
+    margin-bottom: 1.5rem;
+    color: var(--meta-text-primary);
+}
+
+.hero-section p {
+    font-weight: 400;
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: var(--meta-text-secondary);
+    margin-bottom: 2rem;
+}
+
+/* Mobile Responsiveness for Hero Section */
+@media (max-width: 768px) {
+    .hero-section {
+        padding: 4rem 0 3rem;
+        text-align: center;
+    }
+
+    .hero-section h1 {
+        font-size: 2.5rem;
+    }
+
+    .hero-section p {
+        font-size: 1rem;
+        margin-left: auto;
+        margin-right: auto;
+        max-width: 90%;
+    }
+
+    .hero-section .btn {
+        margin: 0 auto 2rem;
+        display: inline-block;
+    }
+
+    .hero-section .img-fluid {
+        margin-top: 2rem;
+        max-width: 80%;
+        margin-left: auto;
+        margin-right: auto;
+        display: block;
+    }
+}
+
+/* Feature Cards */
+.features-section {
+    padding: 5rem 0;
+}
+
+.features-section h2 {
+    font-weight: 600;
+    font-size: 2.5rem;
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.meta-card {
+    padding: 2rem;
+    text-align: center;
+}
+
+.meta-card i {
+    color: var(--meta-primary);
+    margin-bottom: 1.5rem;
+}
+
+.meta-card h3 {
+    font-weight: 600;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--meta-text-primary);
+}
+
+.meta-card p {
+    font-weight: 400;
+    color: var(--meta-text-secondary);
+    line-height: 1.6;
+}
+
+/* CTA Section */
+.cta-section {
+    padding: 5rem 0;
+    background: var(--meta-background);
+}
+
+.cta-section h2 {
+    font-weight: 600;
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.cta-section p {
+    font-weight: 400;
+    font-size: 1.1rem;
+    color: var(--meta-text-secondary);
+    margin-bottom: 2rem;
+}
+
+/* Buttons */
+.btn {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 500;
+    padding: 0.8rem 2rem;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: var(--meta-primary);
+    border: none;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 15px rgba(8, 102, 255, 0.2);
+}
+
+/* Responsive Typography */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2.5rem;
+    }
+    
+    .features-section h2,
+    .cta-section h2 {
+        font-size: 2rem;
+    }
+} 
