@@ -1,15 +1,32 @@
-from flask import render_template, redirect, url_for, flash, request, current_app, send_file
+from flask import render_template, redirect, url_for, flash, request, current_app, send_file, jsonify, send_from_directory
 from flask_login import login_required, current_user
 from app import db
 from app.admin import bp
 from app.admin.forms import (BursaryProgramForm, WardForm, ApplicationReviewForm, 
                            DocumentForm)
 from app.models import (User, BursaryProgram, Ward, Application, 
-                       ApplicationTimeline, Document, Profile)
+                       ApplicationTimeline, Profile)
+from app.models import Document as DocumentModel
 from app.decorators import admin_required
 from datetime import datetime
 from sqlalchemy import and_, func
 import os
+import io
+import csv
+from functools import wraps
+from datetime import datetime
+from docx import Document
+from docx.shared import Inches
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle
+from flask import send_file
+from werkzeug.utils import secure_filename
+import pandas as pd
+from sqlalchemy import func, case
+from datetime import datetime, timedelta
+
+
 
 @bp.route('/dashboard')
 @login_required
@@ -89,6 +106,27 @@ def edit_program(program_id):
     
     return render_template('admin/program_form.html', form=form, program=program)
 
+@bp.route('/program/<int:program_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_program(program_id):
+    program = BursaryProgram.query.get_or_404(program_id)
+    
+    # Check if there are any applications for this program
+    if program.applications.count() > 0:
+        flash('Cannot delete program that has applications.', 'error')
+        return redirect(url_for('admin.programs'))
+    
+    try:
+        db.session.delete(program)
+        db.session.commit()
+        flash('Program has been deleted successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting program: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.programs'))
+
 @bp.route('/applications')
 @login_required
 @admin_required
@@ -149,7 +187,7 @@ def review_application(application_id):
 @login_required
 @admin_required
 def download_document(document_id):
-    document = Document.query.get_or_404(document_id)
+    document = DocumentModel.query.get_or_404(document_id)
     file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], document.url)
     
     if not os.path.exists(file_path):
@@ -208,3 +246,181 @@ def edit_ward(ward_id):
         return redirect(url_for('admin.wards'))
     
     return render_template('admin/ward_form.html', form=form, ward=ward)
+
+@bp.route('/ward/<int:ward_id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_ward(ward_id):
+    ward = Ward.query.get_or_404(ward_id)
+    
+    # Check if there are any programs or applications in this ward  
+    if ward.programs.count() > 0:
+        flash('Cannot delete ward that has active programs.', 'error')
+        return redirect(url_for('admin.wards'))
+    
+    if ward.profiles.count() > 0:
+        flash('Cannot delete ward that has registered students.', 'error')
+        return redirect(url_for('admin.wards'))
+    
+    try:
+        db.session.delete(ward)
+        db.session.commit()
+        flash('Ward has been deleted successfully.', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting ward: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.wards'))
+
+@bp.route('/reports')
+@login_required
+@admin_required
+def reports():
+    # Summary statistics
+    total_applications = Application.query.count()
+    pending_applications = Application.query.filter_by(status='PENDING').count()
+    approved_applications = Application.query.filter_by(status='APPROVED').count()
+    total_amount_approved = db.session.query(func.sum(Application.amount))\
+        .filter_by(status='APPROVED').scalar() or 0
+
+    # Get ward-wise statistics using updated case syntax
+    ward_stats = db.session.query(
+        Ward.id,
+        Ward.name,
+        func.count(Application.id).label('total_applications'),
+        func.sum(
+            case(
+                (Application.status == 'APPROVED', Application.amount),
+                else_=0
+            )
+        ).label('total_approved')
+    ).outerjoin(Application, Ward.id == Application.ward_id)\
+     .group_by(Ward.id, Ward.name)\
+     .all()
+
+    return render_template('admin/reports.html',
+                         total_applications=total_applications,
+                         pending_applications=pending_applications,
+                         approved_applications=approved_applications,
+                         total_amount_approved=total_amount_approved,
+                         ward_stats=ward_stats)
+
+@bp.route('/reports/export')
+@login_required
+@admin_required
+def export_report():
+    report_type = request.args.get('type', 'applications')
+    format = request.args.get('format', 'excel')
+    
+    if report_type == 'applications':
+        # Get all applications with related data
+        applications = db.session.query(
+            Application,
+            User,
+            Ward.name.label('ward_name'),
+            BursaryProgram.name.label('program_name')
+        ).join(User, Application.student_id == User.id)\
+         .join(Ward, Application.ward_id == Ward.id)\
+         .join(BursaryProgram, Application.program_id == BursaryProgram.id)\
+         .all()
+
+        # Create DataFrame
+        data = []
+        for app, user, ward_name, program_name in applications:
+            data.append({
+                'Application ID': app.id,
+                'Student Name': f"{user.first_name} {user.last_name}",
+                'Email': user.email,
+                'Ward': ward_name,
+                'Program': program_name,
+                'Amount': app.amount,
+                'Status': app.status,
+                'Date Applied': app.created_at.strftime('%Y-%m-%d'),
+                'Last Updated': app.updated_at.strftime('%Y-%m-%d')
+            })
+        
+        df = pd.DataFrame(data)
+        
+        if format == 'excel':
+            output = io.BytesIO()
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                df.to_excel(writer, sheet_name='Applications', index=False)
+            output.seek(0)
+            
+            return send_file(
+                output,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                as_attachment=True,
+                download_name=f'applications_report_{datetime.now().strftime("%Y%m%d")}.xlsx'
+            )
+        
+        elif format == 'csv':
+            output = io.StringIO()
+            df.to_csv(output, index=False)
+            output.seek(0)
+            
+            return send_file(
+                io.BytesIO(output.getvalue().encode('utf-8')),
+                mimetype='text/csv',
+                as_attachment=True,
+                download_name=f'applications_report_{datetime.now().strftime("%Y%m%d")}.csv'
+            )
+
+    return jsonify({'error': 'Invalid report type'})
+
+@bp.route('/reports/ward/<int:ward_id>')
+@login_required
+@admin_required
+def ward_report(ward_id):
+    ward = Ward.query.get_or_404(ward_id)
+    
+    # Get all applications for this ward
+    applications = Application.query.filter_by(ward_id=ward_id).all()
+    
+    # Calculate status distribution
+    status_counts = {}
+    status_amounts = {}
+    total_apps = len(applications)
+    
+    for app in applications:
+        if app.status not in status_counts:
+            status_counts[app.status] = 0
+            status_amounts[app.status] = 0
+        status_counts[app.status] += 1
+        if app.status == 'APPROVED':
+            status_amounts[app.status] += app.amount
+    
+    status_distribution = [
+        {
+            'name': status,
+            'count': count,
+            'percentage': (count / total_apps * 100) if total_apps > 0 else 0,
+            'amount': status_amounts[status]
+        }
+        for status, count in status_counts.items()
+    ]
+    
+    # Get ward statistics
+    stats = {
+        'total_applications': total_apps,
+        'approved_applications': Application.query.filter_by(ward_id=ward_id, status='APPROVED').count(),
+        'total_amount': db.session.query(func.sum(Application.amount))\
+            .filter_by(ward_id=ward_id, status='APPROVED').scalar() or 0,
+        'budget_remaining': ward.total_budget - (
+            db.session.query(func.sum(Application.amount))
+            .filter_by(ward_id=ward_id, status='APPROVED')
+            .scalar() or 0
+        ),
+        'status_distribution': status_distribution
+    }
+    
+    # Get recent applications
+    recent_applications = Application.query.filter_by(ward_id=ward_id)\
+        .order_by(Application.created_at.desc())\
+        .limit(10)\
+        .all()
+    
+    return render_template('admin/ward_report.html',
+                         ward=ward,
+                         stats=stats,
+                         recent_applications=recent_applications)

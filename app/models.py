@@ -39,24 +39,25 @@ def load_user(id):
 class Profile(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True)
-    id_number = db.Column(db.String(20), unique=True)
+    first_name = db.Column(db.String(50))
+    last_name = db.Column(db.String(50))
     phone_number = db.Column(db.String(20))
     date_of_birth = db.Column(db.Date)
     gender = db.Column(db.String(10))
-    address = db.Column(db.String(200))
     ward_id = db.Column(db.Integer, db.ForeignKey('ward.id'))
 
 class Ward(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
-    description = db.Column(db.String(500), nullable=True)
+    description = db.Column(db.String(500))
     total_budget = db.Column(db.Float, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
+    # Relationships
+    programs = db.relationship('BursaryProgram', backref='ward', lazy='dynamic')
     profiles = db.relationship('Profile', backref='ward', lazy='dynamic')
     applications = db.relationship('Application', backref='ward', lazy='dynamic')
-    bursary_programs = db.relationship('BursaryProgram', backref='ward', lazy='dynamic')
 
 class BursaryProgram(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -90,15 +91,17 @@ class Application(db.Model):
 class Document(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.String(50), nullable=False)
-    url = db.Column(db.String(500), nullable=False)
+    url = db.Column(db.String(500), nullable=False)     # original filename
     application_id = db.Column(db.Integer, db.ForeignKey('application.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class AcademicInfo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True)
-    school_name = db.Column(db.String(200), nullable=False)
-    current_grade = db.Column(db.String(50), nullable=False)
+    institution = db.Column(db.String(200), nullable=False)
+    course = db.Column(db.String(100), nullable=False)
+    year_of_study = db.Column(db.Integer, nullable=False)
+    student_id = db.Column(db.String(20), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 

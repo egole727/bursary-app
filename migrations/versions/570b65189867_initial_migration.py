@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: f62476649cf4
+Revision ID: 570b65189867
 Revises: 
-Create Date: 2024-12-01 12:40:31.007140
+Create Date: 2024-12-02 11:15:49.370818
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'f62476649cf4'
+revision = '570b65189867'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -43,8 +43,10 @@ def upgrade():
     op.create_table('academic_info',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.Column('school_name', sa.String(length=200), nullable=False),
-    sa.Column('current_grade', sa.String(length=50), nullable=False),
+    sa.Column('institution', sa.String(length=200), nullable=False),
+    sa.Column('course', sa.String(length=100), nullable=False),
+    sa.Column('year_of_study', sa.Integer(), nullable=False),
+    sa.Column('student_id', sa.String(length=20), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=True),
     sa.Column('updated_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
@@ -69,16 +71,15 @@ def upgrade():
     op.create_table('profile',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=True),
-    sa.Column('id_number', sa.String(length=20), nullable=True),
+    sa.Column('first_name', sa.String(length=50), nullable=True),
+    sa.Column('last_name', sa.String(length=50), nullable=True),
     sa.Column('phone_number', sa.String(length=20), nullable=True),
     sa.Column('date_of_birth', sa.Date(), nullable=True),
     sa.Column('gender', sa.String(length=10), nullable=True),
-    sa.Column('address', sa.String(length=200), nullable=True),
     sa.Column('ward_id', sa.Integer(), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.ForeignKeyConstraint(['ward_id'], ['ward.id'], ),
     sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('id_number'),
     sa.UniqueConstraint('user_id')
     )
     op.create_table('application',

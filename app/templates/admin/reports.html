@@ -1,0 +1,104 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Bursary Reports{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Reports Dashboard</h2>
+    
+    <!-- Summary Cards -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Applications</h5>
+                    <h2 class="card-text">{{ total_applications }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Applications</h5>
+                    <h2 class="card-text">{{ pending_applications }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Approved Applications</h5>
+                    <h2 class="card-text">{{ approved_applications }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Total Amount Approved</h5>
+                    <h2 class="card-text">KES {{ "{:,.2f}".format(total_amount_approved) }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Options -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Export Reports</h5>
+                    <div class="btn-group">
+                        <a href="{{ url_for('admin.export_report', type='applications', format='excel') }}" 
+                           class="btn btn-primary">
+                            <i class="fas fa-file-excel me-2"></i>Export to Excel
+                        </a>
+                        <a href="{{ url_for('admin.export_report', type='applications', format='csv') }}" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-file-csv me-2"></i>Export to CSV
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ward Statistics -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Ward Statistics</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Ward</th>
+                                    <th>Total Applications</th>
+                                    <th>Total Amount Approved</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for ward in ward_stats %}
+                                <tr>
+                                    <td>{{ ward.name }}</td>
+                                    <td>{{ ward.total_applications }}</td>
+                                    <td>KES {{ "{:,.2f}".format(ward.total_approved) }}</td>
+                                    <td>
+                                        <a href="{{ url_for('admin.ward_report', ward_id=ward.id) }}" 
+                                           class="btn btn-sm btn-info">
+                                            <i class="fas fa-chart-bar me-1"></i>View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

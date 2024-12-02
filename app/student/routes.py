@@ -67,11 +67,16 @@ def profile():
         if 'submit_profile' in request.form and profile_form.validate_on_submit():
             try:
                 if current_user.profile is None:
-                    profile = Profile()
-                    profile_form.populate_obj(profile)
+                    profile = Profile(user_id=current_user.id)
+                    db.session.add(profile)
                     current_user.profile = profile
-                else:
-                    profile_form.populate_obj(current_user.profile)
+                
+                current_user.profile.first_name = profile_form.first_name.data
+                current_user.profile.last_name = profile_form.last_name.data
+                current_user.profile.date_of_birth = profile_form.date_of_birth.data
+                current_user.profile.gender = profile_form.gender.data
+                current_user.profile.phone_number = profile_form.phone_number.data
+                current_user.profile.ward_id = profile_form.ward_id.data
                 
                 db.session.commit()
                 flash('Profile updated successfully', 'success')
@@ -84,11 +89,14 @@ def profile():
         if 'submit_academic' in request.form and academic_form.validate_on_submit():
             try:
                 if current_user.academic_info is None:
-                    academic_info = AcademicInfo()
-                    academic_form.populate_obj(academic_info)
+                    academic_info = AcademicInfo(user_id=current_user.id)
+                    db.session.add(academic_info)
                     current_user.academic_info = academic_info
-                else:
-                    academic_form.populate_obj(current_user.academic_info)
+                
+                current_user.academic_info.institution = academic_form.institution.data
+                current_user.academic_info.course = academic_form.course.data
+                current_user.academic_info.year_of_study = academic_form.year_of_study.data
+                current_user.academic_info.student_id = academic_form.student_id.data
                 
                 db.session.commit()
                 flash('Academic information updated successfully', 'success')
@@ -256,3 +264,10 @@ def allowed_file(filename):
     ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx'}
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+# @bp.route('/settings')
+# @login_required
+# def settings():
+#     return render_template('student/settings.html', 
+#                          user=current_user,
+#                          title='Settings')

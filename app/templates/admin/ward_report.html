@@ -1,0 +1,175 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Ward Report - {{ ward.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>{{ ward.name }} - Ward Report</h2>
+        <div class="btn-group">
+            <a href="{{ url_for('admin.export_report', type='applications', format='excel', ward_id=ward.id) }}" 
+               class="btn btn-primary">
+                <i class="fas fa-file-excel me-2"></i>Export Report
+            </a>
+            <a href="{{ url_for('admin.reports') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Back to Reports
+            </a>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted mb-3">Total Budget</h6>
+                    <h3 class="mb-2">KES {{ "{:,.2f}".format(ward.total_budget) }}</h3>
+                    <p class="card-text text-muted">Allocated for {{ ward.name }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted mb-3">Total Applications</h6>
+                    <h3 class="mb-2">{{ stats.total_applications }}</h3>
+                    <p class="card-text text-muted">Applications received</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted mb-3">Approved Amount</h6>
+                    <h3 class="mb-2">KES {{ "{:,.2f}".format(stats.total_amount) }}</h3>
+                    <p class="card-text text-muted">Total funds approved</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h6 class="card-title text-muted mb-3">Budget Remaining</h6>
+                    <h3 class="mb-2 {% if stats.budget_remaining < 0 %}text-danger{% endif %}">
+                        KES {{ "{:,.2f}".format(stats.budget_remaining) }}
+                    </h3>
+                    <p class="card-text text-muted">Available funds</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Budget Utilization -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Budget Utilization</h5>
+                    <div class="progress" style="height: 25px;">
+                        {% set percentage = (stats.total_amount / ward.total_budget * 100)|round|int %}
+                        <div class="progress-bar {% if percentage > 90 %}bg-danger
+                                                {% elif percentage > 70 %}bg-warning
+                                                {% else %}bg-success{% endif %}"
+                             role="progressbar"
+                             style="width: {{ percentage }}%"
+                             aria-valuenow="{{ percentage }}"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                            {{ percentage }}%
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Status Distribution -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Application Status Distribution</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Count</th>
+                                    <th>Percentage</th>
+                                    <th>Total Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for status in stats.status_distribution %}
+                                <tr>
+                                    <td>
+                                        <span class="badge {% if status.name == 'APPROVED' %}bg-success
+                                                         {% elif status.name == 'REJECTED' %}bg-danger
+                                                         {% elif status.name == 'PENDING' %}bg-warning
+                                                         {% else %}bg-secondary{% endif %}">
+                                            {{ status.name }}
+                                        </span>
+                                    </td>
+                                    <td>{{ status.count }}</td>
+                                    <td>{{ "{:.1f}%".format(status.percentage) }}</td>
+                                    <td>KES {{ "{:,.2f}".format(status.amount) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Applications -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Applications</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Program</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Submitted</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for application in recent_applications %}
+                                <tr>
+                                    <td>{{ application.applicant.first_name }} {{ application.applicant.last_name }}</td>
+                                    <td>{{ application.program.name }}</td>
+                                    <td>KES {{ "{:,.2f}".format(application.amount) }}</td>
+                                    <td>
+                                        <span class="badge {% if application.status == 'APPROVED' %}bg-success
+                                                         {% elif application.status == 'REJECTED' %}bg-danger
+                                                         {% elif application.status == 'PENDING' %}bg-warning
+                                                         {% else %}bg-secondary{% endif %}">
+                                            {{ application.status }}
+                                        </span>
+                                    </td>
+                                    <td>{{ application.created_at.strftime('%Y-%m-%d') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('admin.review_application', application_id=application.id) }}"
+                                           class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye me-1"></i>Review
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

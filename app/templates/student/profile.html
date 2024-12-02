@@ -1,130 +1,89 @@
-{% extends "base.html" %}
-
-{% block title %}Student Profile{% endblock %}
+{% extends "student/base.html" %}
 
 {% block content %}
 <div class="container py-4">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            {% with messages = get_flashed_messages(with_categories=true) %}
-                {% if messages %}
-                    {% for category, message in messages %}
-                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
-                            {{ message }}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    {% endfor %}
-                {% endif %}
-            {% endwith %}
+    <h2 class="mb-4">Student Profile</h2>
 
-            <!-- Personal Information Form -->
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Personal Information</h4>
+    <!-- Personal Information Form -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Personal Information</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('student.profile') }}">
+                {{ profile_form.csrf_token }}
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        {{ profile_form.first_name.label(class="form-label") }}
+                        {{ profile_form.first_name(class="form-control") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ profile_form.last_name.label(class="form-label") }}
+                        {{ profile_form.last_name(class="form-control") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ profile_form.date_of_birth.label(class="form-label") }}
+                        {{ profile_form.date_of_birth(class="form-control", type="date") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ profile_form.gender.label(class="form-label") }}
+                        {{ profile_form.gender(class="form-select") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ profile_form.phone_number.label(class="form-label") }}
+                        {{ profile_form.phone_number(class="form-control") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ profile_form.ward_id.label(class="form-label") }}
+                        {{ profile_form.ward_id(class="form-select") }}
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="">
-                        {{ profile_form.hidden_tag() }}
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                {{ profile_form.id_number.label(class="form-label") }}
-                                {{ profile_form.id_number(class="form-control") }}
-                                {% for error in profile_form.id_number.errors %}
-                                    <span class="text-danger">{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                {{ profile_form.phone_number.label(class="form-label") }}
-                                {{ profile_form.phone_number(class="form-control") }}
-                                {% for error in profile_form.phone_number.errors %}
-                                    <span class="text-danger">{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                {{ profile_form.date_of_birth.label(class="form-label") }}
-                                {{ profile_form.date_of_birth(class="form-control", type="date") }}
-                                {% for error in profile_form.date_of_birth.errors %}
-                                    <span class="text-danger">{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                {{ profile_form.gender.label(class="form-label") }}
-                                {{ profile_form.gender(class="form-select") }}
-                                {% for error in profile_form.gender.errors %}
-                                    <span class="text-danger">{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                {{ profile_form.address.label(class="form-label") }}
-                                {{ profile_form.address(class="form-control") }}
-                                {% for error in profile_form.address.errors %}
-                                    <span class="text-danger">{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                {{ profile_form.ward_id.label(class="form-label") }}
-                                {{ profile_form.ward_id(class="form-select") }}
-                                {% for error in profile_form.ward_id.errors %}
-                                    <span class="text-danger">{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <button type="submit" name="submit_profile" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Save Personal Information
-                            </button>
-                        </div>
-                    </form>
+                
+                <div class="mt-3">
+                    <button type="submit" name="submit_profile" class="btn btn-primary">
+                        Update Personal Information
+                    </button>
                 </div>
-            </div>
+            </form>
+        </div>
+    </div>
 
-            <!-- Academic Information Form -->
-            <div class="card">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Academic Information</h4>
+    <!-- Academic Information Form -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Academic Information</h5>
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('student.profile') }}">
+                {{ academic_form.csrf_token }}
+                
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        {{ academic_form.institution.label(class="form-label") }}
+                        {{ academic_form.institution(class="form-control") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ academic_form.course.label(class="form-label") }}
+                        {{ academic_form.course(class="form-control") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ academic_form.year_of_study.label(class="form-label") }}
+                        {{ academic_form.year_of_study(class="form-select") }}
+                    </div>
+                    <div class="col-md-6">
+                        {{ academic_form.student_id.label(class="form-label") }}
+                        {{ academic_form.student_id(class="form-control") }}
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form method="POST" action="">
-                        {{ academic_form.hidden_tag() }}
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                {{ academic_form.school_name.label(class="form-label") }}
-                                {{ academic_form.school_name(class="form-control") }}
-                                {% for error in academic_form.school_name.errors %}
-                                    <span class="text-danger">{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                {{ academic_form.current_grade.label(class="form-label") }}
-                                {{ academic_form.current_grade(class="form-control") }}
-                                {% for error in academic_form.current_grade.errors %}
-                                    <span class="text-danger">{{ error }}</span>
-                                {% endfor %}
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <button type="submit" name="submit_academic" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Save Academic Information
-                            </button>
-                        </div>
-                    </form>
+                
+                <div class="mt-3">
+                    <button type="submit" name="submit_academic" class="btn btn-primary">
+                        Update Academic Information
+                    </button>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
-
-{% block scripts %}
-<script>
-    // Initialize date picker if needed
-    document.addEventListener('DOMContentLoaded', function() {
-        // Add any additional JavaScript initialization here
-    });
-</script>
-{% endblock %}
-
-{% endblock %}
+{% endblock %} 

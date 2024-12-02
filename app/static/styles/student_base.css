@@ -1,0 +1,102 @@
+/* Custom styles for student dashboard */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--meta-background);
+}
+
+.navbar {
+    padding: 1rem 0;
+    background: var(--meta-surface) !important;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08) !important;
+}
+
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.25rem;
+    color: var(--meta-text-primary) !important;
+}
+
+.navbar-brand i {
+    color: var(--meta-primary);
+}
+
+.nav-link {
+    font-weight: 500;
+    padding: 0.5rem 1rem !important;
+    color: var(--meta-text-secondary) !important;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    color: var(--meta-primary) !important;
+    background-color: var(--meta-hover);
+}
+
+.nav-link.active {
+    color: var(--meta-primary) !important;
+    background-color: rgba(8, 102, 255, 0.1);
+}
+
+.dropdown-menu {
+    border: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    border-radius: 12px;
+    padding: 0.5rem;
+}
+
+.dropdown-item {
+    padding: 0.6rem 1rem;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background-color: var(--meta-hover);
+    color: var(--meta-primary);
+}
+
+.dropdown-item i {
+    width: 20px;
+    text-align: center;
+}
+
+.alert {
+    border: none;
+    border-radius: 12px;
+    font-weight: 500;
+}
+
+.main-content {
+    min-height: calc(100vh - 70px);
+    padding: 2rem 0;
+}
+
+/* Active state for current page */
+.nav-item .nav-link[href="{{ request.path }}"] {
+    color: var(--meta-primary) !important;
+    background-color: rgba(8, 102, 255, 0.1);
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 991.98px) {
+    .navbar-collapse {
+        padding: 1rem 0;
+    }
+    
+    .nav-link {
+        padding: 0.75rem 1rem !important;
+    }
+    
+    .dropdown-menu {
+        border: none;
+        box-shadow: none;
+        padding: 0;
+        margin-left: 1rem;
+    }
+    
+    .dropdown-item {
+        padding: 0.75rem 1rem;
+    }
+}
