@@ -86,7 +86,7 @@ class Application(db.Model):
     student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ward_id = db.Column(db.Integer, db.ForeignKey('ward.id'), nullable=False)
     program_id = db.Column(db.Integer, db.ForeignKey('bursary_program.id'), nullable=False)
-    status = db.Column(db.String(20), default='PENDING')
+    status = db.Column(db.String(50), default='PENDING')
     amount = db.Column(db.Float, nullable=False)
     reason = db.Column(db.Text, nullable=False)
     reviewed_by = db.Column(db.Integer, db.ForeignKey('user.id'))
