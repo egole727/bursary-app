@@ -198,23 +198,27 @@ def apply(program_id):
             db.session.add(application)
             db.session.flush()  # Get the application ID
             
-            # Handle document uploads if any
-            if form.documents.data:
-                upload_folder = current_app.config['UPLOAD_FOLDER']
-                os.makedirs(upload_folder, exist_ok=True)
-                
-                for file in form.documents.data:
-                    if file and allowed_file(file.filename):
-                        filename = secure_filename(file.filename)
-                        filepath = os.path.join(upload_folder, filename)
-                        file.save(filepath)
-                        
-                        document = Document(
-                            application_id=application.id,
-                            type='SUPPORTING_DOCUMENT',
-                            url=filename
-                        )
-                        db.session.add(document)
+            # Ensure at least one document is uploaded
+            if not form.documents.data or not any(file.filename for file in form.documents.data):
+                flash('At least one document must be uploaded', 'error')
+                return redirect(request.url)
+            
+            # Handle document uploads
+            upload_folder = current_app.config['UPLOAD_FOLDER']
+            os.makedirs(upload_folder, exist_ok=True)
+            
+            for file in form.documents.data:
+                if file and allowed_file(file.filename):
+                    filename = secure_filename(file.filename)
+                    filepath = os.path.join(upload_folder, filename)
+                    file.save(filepath)
+                    
+                    document = Document(
+                        application_id=application.id,
+                        type='SUPPORTING_DOCUMENT',
+                        url=filename
+                    )
+                    db.session.add(document)
             
             # Create timeline entry
             timeline = ApplicationTimeline(
@@ -234,7 +238,7 @@ def apply(program_id):
             db.session.rollback()
             flash(f'Error submitting application: {str(e)}', 'error')
             print(f"Error submitting application: {str(e)}")
-    
+
     return render_template('student/apply.html', form=form, program=program)
 
 @bp.route('/application/<int:application_id>')
@@ -314,9 +318,3 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
-# @bp.route('/settings')
-# @login_required
-# def settings():
-#     return render_template('student/settings.html', 
-#                          user=current_user,
-#                          title='Settings')

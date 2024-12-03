@@ -82,6 +82,11 @@ class BursaryProgram(db.Model):
 
 class Application(db.Model):
     __tablename__ = 'application'
+
+    def validate_documents(self):
+        if not self.documents.count():
+            raise ValueError("At least one document must be uploaded")
+
     id = db.Column(db.Integer, primary_key=True)
     student_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     ward_id = db.Column(db.Integer, db.ForeignKey('ward.id'), nullable=False)
