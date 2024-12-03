@@ -42,30 +42,33 @@ def register():
     
     form = RegistrationForm()
     if form.validate_on_submit():
-        user = User(
-            email=form.email.data,
-            first_name=form.first_name.data,
-            last_name=form.last_name.data
-        )
-        user.set_password(form.password.data)
-        
-        profile = Profile(
-            user=user,
-            first_name=form.first_name.data,
-            last_name=form.last_name.data,
-            id_number=form.id_number.data
-        )
-        
-        db.session.add(user)
-        db.session.add(profile)
-        
         try:
+            # Create user once
+            user = User(
+                email=form.email.data,
+                first_name=form.first_name.data,
+                last_name=form.last_name.data
+            )
+            user.set_password(form.password.data)
+            
+            # Create profile
+            profile = Profile(
+                user=user,
+                first_name=form.first_name.data,
+                last_name=form.last_name.data,
+                id_number=form.id_number.data
+            )
+            
+            db.session.add(user)
+            db.session.add(profile)
             db.session.commit()
-            flash('Congratulations, you are now a registered user!', 'success')
+            
+            flash('Congratulations, you are now registered!', 'success')
             return redirect(url_for('auth.login'))
-        except IntegrityError:
+            
+        except Exception as e:
             db.session.rollback()
             flash('Error: Email or ID number already registered.', 'danger')
             return redirect(url_for('auth.register'))
-            
+    
     return render_template('auth/register.html', title='Register', form=form)

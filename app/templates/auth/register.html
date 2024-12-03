@@ -102,4 +102,44 @@
         </div>
     </div>
 </div>
+
+<script>
+function validatePassword() {
+    const password = document.getElementById('password').value;
+    const messageDiv = document.getElementById('password-strength');
+    
+    // Length check
+    if (password.length < 8) {
+        messageDiv.innerHTML = 'Password must be at least 8 characters long';
+        return false;
+    }
+    
+    // Uppercase check
+    if (!/[A-Z]/.test(password)) {
+        messageDiv.innerHTML = 'Password must contain at least one uppercase letter';
+        return false;
+    }
+    
+    // Lowercase check
+    if (!/[a-z]/.test(password)) {
+        messageDiv.innerHTML = 'Password must contain at least one lowercase letter';
+        return false;
+    }
+    
+    // Number check
+    if (!/\d/.test(password)) {
+        messageDiv.innerHTML = 'Password must contain at least one number';
+        return false;
+    }
+    
+    // Special character check
+    if (!/[ !@#$%&'()*+,-./[\\\]^_`{|}~"]/.test(password)) {
+        messageDiv.innerHTML = 'Password must contain at least one special character';
+        return false;
+    }
+    
+    messageDiv.innerHTML = 'Password is strong';
+    return true;
+}
+</script>
 {% endblock %}

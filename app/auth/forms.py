@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, BooleanField, SubmitField, SelectField
 from wtforms.validators import DataRequired, Email, EqualTo, Length, ValidationError
 from app.models import User, Profile, Ward
+from .validators import validate_password
 
 class LoginForm(FlaskForm):
     email = StringField('Email', validators=[DataRequired(), Email()])
@@ -34,3 +35,9 @@ class RegistrationForm(FlaskForm):
         profile = Profile.query.filter_by(id_number=id_number.data).first()
         if profile is not None:
             raise ValidationError('This ID number is already registered.')
+
+    def validate_password(self, field):
+        """Validate password strength"""
+        is_valid, message = validate_password(field.data)
+        if not is_valid:
+            raise ValidationError(message)
