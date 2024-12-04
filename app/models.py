@@ -43,13 +43,11 @@ class Profile(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', name='fk_profile_user'), unique=True)
     first_name = db.Column(db.String(50))
     last_name = db.Column(db.String(50))
-    phone_number = db.Column(db.String(20))
+    phone_number = db.Column(db.String(20), unique=True)
     date_of_birth = db.Column(db.Date)
     gender = db.Column(db.String(10))
     ward_id = db.Column(db.Integer, db.ForeignKey('ward.id', name='fk_profile_ward'))
-    id_number = db.Column(db.String(20), unique=True, 
-                         nullable=False,
-                         name='uq_profile_id_number')
+    id_number = db.Column(db.String(20), unique=True, nullable=False)
 
 class Ward(db.Model):
     __tablename__ = 'ward'
@@ -116,7 +114,7 @@ class AcademicInfo(db.Model):
     institution = db.Column(db.String(200), nullable=False)
     course = db.Column(db.String(100), nullable=False)
     year_of_study = db.Column(db.Integer, nullable=False)
-    student_id = db.Column(db.String(20), nullable=False)
+    student_id = db.Column(db.String(20), unique=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -124,6 +122,6 @@ class ApplicationTimeline(db.Model):
     __tablename__ = 'application_timeline'
     id = db.Column(db.Integer, primary_key=True)
     application_id = db.Column(db.Integer, db.ForeignKey('application.id'), nullable=False)
-    status = db.Column(db.String(20), nullable=False)
+    status = db.Column(db.String(50), nullable=False)
     comment = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)

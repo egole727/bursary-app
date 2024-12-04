@@ -2,8 +2,12 @@ import re
 
 def validate_password(password):
     """
-    Validate password strength
-    Returns (bool, str): (is_valid, error_message)
+    Password must:
+    - Be at least 8 characters long
+    - Contain at least one uppercase letter
+    - Contain at least one lowercase letter
+    - Contain at least one number
+    - Contain at least one special character
     """
     if len(password) < 8:
         return False, "Password must be at least 8 characters long"
