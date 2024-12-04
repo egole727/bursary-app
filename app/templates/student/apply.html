@@ -71,11 +71,14 @@
 
                         <div class="mb-3">
                             {{ form.documents.label(class="form-label") }}
-                            {{ form.documents(class="form-control", multiple="multiple", accept=".pdf,.jpg,.jpeg,.png") }}
+                            {{ form.documents(class="form-control", multiple="multiple", accept=".pdf") }}
                             {% for error in form.documents.errors %}
                                 <span class="text-danger">{{ error }}</span>
                             {% endfor %}
-                            <div class="form-text">Upload supporting documents. Accepted formats: PDF, JPG, PNG</div>
+                            <div class="form-text">
+                                Only PDF files are allowed. Maximum file size: 5MB per file.
+                                Please ensure all documents are clear and legible.
+                            </div>
                         </div>
 
                         <div class="d-grid gap-2">
@@ -92,4 +95,28 @@
         </div>
     </div>
 </div>
+
+<script>
+document.querySelector('form').onsubmit = function(e) {
+    const files = document.querySelector('input[type="file"]').files;
+    const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+    
+    for(let file of files) {
+        // Check file type
+        if(!file.type.match('application/pdf')) {
+            alert('Only PDF files are allowed');
+            e.preventDefault();
+            return false;
+        }
+        
+        // Check file size
+        if(file.size > maxSize) {
+            alert('Each file must not exceed 5MB');
+            e.preventDefault();
+            return false;
+        }
+    }
+    return true;
+};
+</script>
 {% endblock %}

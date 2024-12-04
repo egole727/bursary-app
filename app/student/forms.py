@@ -3,6 +3,7 @@ from flask_wtf.file import FileField, MultipleFileField
 from wtforms import StringField, TextAreaField, DecimalField, DateField, SelectField
 from wtforms.validators import DataRequired, Length, NumberRange, Optional, ValidationError
 from flask_login import current_user
+from flask_wtf.file import FileRequired, FileAllowed
 from app.models import Ward, Profile, AcademicInfo
 
 class ProfileForm(FlaskForm):
@@ -48,4 +49,8 @@ class ApplicationForm(FlaskForm):
                          places=2)
     reason = TextAreaField('Reason for Application', 
                           validators=[DataRequired(), Length(min=100, max=1000)])
-    documents = MultipleFileField('Supporting Documents')
+    documents = MultipleFileField('Upload Documents', 
+        validators=[
+            FileRequired(message='At least one document is required'),
+            FileAllowed(['pdf'], 'Only PDF files are allowed!')
+        ])
