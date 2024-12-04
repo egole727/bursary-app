@@ -8,6 +8,7 @@ from app.models import BursaryProgram, Application, Document, ApplicationTimelin
 from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
+import mimetypes
 
 def student_required(f):
     @wraps(f)
@@ -74,7 +75,46 @@ def profile():
     profile = Profile.query.filter_by(user_id=current_user.id).first()
     academic = AcademicInfo.query.filter_by(user_id=current_user.id).first()
 
-    if request.method == 'GET':
+    if request.method == 'POST':
+        print("Form submitted:", request.form)  # Debug print
+        
+        if 'submit_profile' in request.form:
+            if profile_form.validate():
+                try:
+                    if not profile:
+                        profile = Profile(user_id=current_user.id)
+                        print("Creating new profile")
+                    else:
+                        print("Updating existing profile")
+
+                    # Update profile data
+                    profile.first_name = profile_form.first_name.data
+                    profile.last_name = profile_form.last_name.data
+                    profile.phone_number = profile_form.phone_number.data
+                    profile.date_of_birth = profile_form.date_of_birth.data
+                    profile.gender = profile_form.gender.data
+                    profile.ward_id = profile_form.ward_id.data
+                    profile.id_number = profile_form.id_number.data
+
+                    db.session.add(profile)
+                    db.session.commit()
+                    flash('Profile updated successfully!', 'success')
+                    print("Profile saved successfully")
+                    
+                    # Redirect after successful update
+                    return redirect(url_for('student.dashboard'))
+
+                except Exception as e:
+                    db.session.rollback()
+                    flash(f'Error updating profile: {str(e)}', 'error')
+                    print(f"Error updating profile: {str(e)}")
+            else:
+                print("Profile form validation errors:", profile_form.errors)
+                for field, errors in profile_form.errors.items():
+                    for error in errors:
+                        flash(f'{field}: {error}', 'error')
+
+    elif request.method == 'GET':
         if profile:
             # Populate profile form with existing data
             profile_form.first_name.data = profile.first_name
@@ -85,65 +125,40 @@ def profile():
             profile_form.ward_id.data = profile.ward_id
             profile_form.id_number.data = profile.id_number
 
-        if academic:
-            # Populate academic form with existing data
-            academic_form.institution.data = academic.institution
-            academic_form.course.data = academic.course
-            academic_form.year_of_study.data = academic.year_of_study
-            academic_form.student_id.data = academic.student_id
-
-    if request.method == 'POST':
-        if 'submit_profile' in request.form and profile_form.validate():
-            try:
-                if not profile:
-                    profile = Profile(user_id=current_user.id)
-
-                # Update profile data
-                profile.first_name = profile_form.first_name.data
-                profile.last_name = profile_form.last_name.data
-                profile.phone_number = profile_form.phone_number.data
-                profile.date_of_birth = profile_form.date_of_birth.data
-                profile.gender = profile_form.gender.data
-                profile.ward_id = profile_form.ward_id.data
-                profile.id_number = profile_form.id_number.data
-
-                db.session.add(profile)
-                db.session.commit()
-                flash('Profile updated successfully!', 'success')
-
-            except Exception as e:
-                db.session.rollback()
-                flash(f'Error updating profile: {str(e)}', 'error')
-                print(f"Error updating profile: {str(e)}")
-
-        if 'submit_academic' in request.form and academic_form.validate():
-            try:
-                if not academic:
-                    academic = AcademicInfo(user_id=current_user.id)
-
-                # Update academic data
-                academic.institution = academic_form.institution.data
-                academic.course = academic_form.course.data
-                academic.year_of_study = academic_form.year_of_study.data
-                academic.student_id = academic_form.student_id.data
-
-                db.session.add(academic)
-                db.session.commit()
-                flash('Academic information updated successfully!', 'success')
-
-            except Exception as e:
-                db.session.rollback()
-                flash(f'Error updating academic info: {str(e)}', 'error')
-                print(f"Error updating academic info: {str(e)}")
-
-        # Check if both profile and academic info are complete
-        if profile and academic:
-            flash('Profile completed successfully!', 'success')
-            return redirect(url_for('student.dashboard'))
-
     return render_template('student/profile.html',
                          profile_form=profile_form,
                          academic_form=academic_form)
+
+def allowed_file(filename):
+    """Check if the file is a PDF."""
+    # Check file extension
+    allowed_extensions = {'pdf'}
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in allowed_extensions
+
+def validate_file(file):
+    """Validate file type and size."""
+    # Check if file exists
+    if not file or file.filename == '':
+        return False, "No file selected"
+        
+    # Check file extension
+    if not allowed_file(file.filename):
+        return False, "Only PDF files are allowed"
+        
+    # Check MIME type
+    mime_type = mimetypes.guess_type(file.filename)[0]
+    if mime_type != 'application/pdf':
+        return False, "Invalid file type. Only PDF files are allowed"
+        
+    # Check file size (5MB limit)
+    file.seek(0, os.SEEK_END)
+    size = file.tell()
+    file.seek(0)
+    if size > 5 * 1024 * 1024:  # 5MB in bytes
+        return False, "File size exceeds 5MB limit"
+        
+    return True, "File is valid"
 
 @bp.route('/apply/<int:program_id>', methods=['GET', 'POST'])
 @login_required
@@ -198,7 +213,7 @@ def apply(program_id):
             db.session.add(application)
             db.session.flush()  # Get the application ID
             
-            # Ensure at least one document is uploaded
+            # Validate documents
             if not form.documents.data or not any(file.filename for file in form.documents.data):
                 flash('At least one document must be uploaded', 'error')
                 return redirect(request.url)
@@ -208,17 +223,32 @@ def apply(program_id):
             os.makedirs(upload_folder, exist_ok=True)
             
             for file in form.documents.data:
-                if file and allowed_file(file.filename):
-                    filename = secure_filename(file.filename)
+                # Validate each file
+                is_valid, message = validate_file(file)
+                if not is_valid:
+                    flash(f'File validation error ({file.filename}): {message}', 'error')
+                    return redirect(request.url)
+
+                # Save file if valid
+                filename = secure_filename(file.filename)
+                filepath = os.path.join(upload_folder, filename)
+                
+                # Ensure unique filename
+                counter = 1
+                while os.path.exists(filepath):
+                    name, ext = os.path.splitext(filename)
+                    filename = f"{name}_{counter}{ext}"
                     filepath = os.path.join(upload_folder, filename)
-                    file.save(filepath)
-                    
-                    document = Document(
-                        application_id=application.id,
-                        type='SUPPORTING_DOCUMENT',
-                        url=filename
-                    )
-                    db.session.add(document)
+                    counter += 1
+
+                file.save(filepath)
+                
+                document = Document(
+                    application_id=application.id,
+                    type='SUPPORTING_DOCUMENT',
+                    url=filename
+                )
+                db.session.add(document)
             
             # Create timeline entry
             timeline = ApplicationTimeline(
@@ -312,9 +342,4 @@ def program_detail(id):
                          program=program,
                          has_applied=existing_application is not None,
                          now=datetime.now())
-
-def allowed_file(filename):
-    ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg', 'doc', 'docx'}
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
