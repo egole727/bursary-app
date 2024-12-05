@@ -2,17 +2,20 @@ from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, login_manager
+from sqlalchemy import CheckConstraint
 
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(120), unique=True, nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=False)
     password_hash = db.Column(db.String(256))  
     first_name = db.Column(db.String(64))
     last_name = db.Column(db.String(64))
+    username = db.Column(db.String(64), unique=True, nullable=False)
     role = db.Column(db.String(20), default='STUDENT')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
     
     # Relationships
     profile = db.relationship('Profile', backref='user', uselist=False)
@@ -23,6 +26,8 @@ class User(UserMixin, db.Model):
                                          lazy='dynamic',
                                          foreign_keys='Application.reviewed_by')
     academic_info = db.relationship('AcademicInfo', backref='user', uselist=False)
+    ward_id = db.Column(db.Integer, db.ForeignKey('ward.id'))
+    ward = db.relationship('Ward', backref='admins')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -30,8 +35,32 @@ class User(UserMixin, db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
 
+    @property
     def is_admin(self):
         return self.role == 'ADMIN'
+    
+    def is_ward_admin(self):
+        return self.role == 'WARD_ADMIN'
+    
+    def is_student(self):
+        return self.role == 'STUDENT'
+
+    # helper methods for ward admin functionality
+    def can_access_ward(self, ward_id):
+        """Check if user has access to a specific ward"""
+        if self.role == 'ADMIN':
+            return True
+        if self.role == 'WARD_ADMIN':
+            return self.ward_id == ward_id
+        return False
+
+    def get_managed_applications(self):
+        """Get applications based on user role"""
+        if self.role == 'ADMIN':
+            return Application.query.all()
+        if self.role == 'WARD_ADMIN':
+            return Application.query.filter_by(ward_id=self.ward_id).all()
+        return Application.query.filter_by(student_id=self.id).all()
 
 @login_manager.user_loader
 def load_user(id):
@@ -43,11 +72,17 @@ class Profile(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', name='fk_profile_user'), unique=True)
     first_name = db.Column(db.String(50))
     last_name = db.Column(db.String(50))
-    phone_number = db.Column(db.String(20), unique=True)
+    phone_number = db.Column(db.String(10), unique=True, nullable=False)
     date_of_birth = db.Column(db.Date)
     gender = db.Column(db.String(10))
     ward_id = db.Column(db.Integer, db.ForeignKey('ward.id', name='fk_profile_ward'))
-    id_number = db.Column(db.String(20), unique=True, nullable=False)
+    id_number = db.Column(db.String(10), unique=True, nullable=False)
+    
+    # # Add check constraints to ensure only digits for both fields
+    # __table_args__ = (
+    #     CheckConstraint('id_number ~ \'^[0-9]+$\'', name='check_id_number_digits'),
+    #     CheckConstraint('phone_number ~ \'^[0-9]+$\'', name='check_phone_number_digits'),
+    # )
 
 class Ward(db.Model):
     __tablename__ = 'ward'

@@ -1,0 +1,137 @@
+{% extends "ward_admin/base.html" %}
+
+{% block ward_admin_content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>Ward Reports</h2>
+        <div class="btn-group">
+            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-download me-2"></i>Export Beneficiaries
+            </button>
+            <ul class="dropdown-menu">
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('ward_admin.export_reports', format='excel') }}">
+                        <i class="fas fa-file-excel me-2"></i>Export as Excel
+                    </a>
+                </li>
+                <li>
+                    <a class="dropdown-item" href="{{ url_for('ward_admin.export_reports', format='csv') }}">
+                        <i class="fas fa-file-csv me-2"></i>Export as CSV
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Ward Overview Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0">Ward Overview - {{ ward.name }}</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="border rounded p-3 text-center">
+                        <h6 class="text-muted">Total Budget</h6>
+                        <h4>KES {{ "{:,.2f}".format(ward.total_budget) }}</h4>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3 text-center">
+                        <h6 class="text-muted">Total Allocated</h6>
+                        <h4>KES {{ "{:,.2f}".format(stats.total_allocated) }}</h4>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3 text-center">
+                        <h6 class="text-muted">Budget Remaining</h6>
+                        <h4>KES {{ "{:,.2f}".format(stats.budget_remaining) }}</h4>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="border rounded p-3 text-center">
+                        <h6 class="text-muted">Total Applications</h6>
+                        <h4>{{ stats.total_applications }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Statistics -->
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Application Status Distribution</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="statusChart"></canvas>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Budget Utilization</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="budgetChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    // Status Distribution Chart
+    new Chart(document.getElementById('statusChart'), {
+        type: 'pie',
+        data: {
+            labels: ['Approved', 'Pending', 'Rejected'],
+            datasets: [{
+                data: [
+                    {{ stats.approved_applications }},
+                    {{ stats.pending_applications }},
+                    {{ stats.rejected_applications }}
+                ],
+                backgroundColor: ['#28a745', '#ffc107', '#dc3545']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    // Budget Utilization Chart
+    new Chart(document.getElementById('budgetChart'), {
+        type: 'doughnut',
+        data: {
+            labels: ['Allocated', 'Remaining'],
+            datasets: [{
+                data: [
+                    {{ stats.total_allocated }},
+                    {{ stats.budget_remaining }}
+                ],
+                backgroundColor: ['#17a2b8', '#6c757d']
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+</script>
+{% endblock %} 

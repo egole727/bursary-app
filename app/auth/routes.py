@@ -10,7 +10,12 @@ from sqlalchemy.exc import IntegrityError
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('main.index'))
+        if current_user.role == 'ADMIN':
+            return redirect(url_for('admin.dashboard'))
+        elif current_user.role == 'WARD_ADMIN':
+            return redirect(url_for('ward_admin.dashboard'))
+        else:
+            return redirect(url_for('student.dashboard'))
     
     form = LoginForm()
     if form.validate_on_submit():
@@ -20,13 +25,13 @@ def login():
             return redirect(url_for('auth.login'))
         
         login_user(user, remember=form.remember_me.data)
-        next_page = request.args.get('next')
-        if not next_page or urlparse(next_page).netloc != '':
-            if user.is_admin():
-                next_page = url_for('admin.dashboard')
-            else:
-                next_page = url_for('student.dashboard')
-        return redirect(next_page)
+        
+        if user.role == 'ADMIN':
+            return redirect(url_for('admin.dashboard'))
+        elif user.role == 'WARD_ADMIN':
+            return redirect(url_for('ward_admin.dashboard'))
+        else:
+            return redirect(url_for('student.dashboard'))
     
     return render_template('auth/login.html', title='Sign In', form=form)
 
@@ -43,20 +48,22 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         try:
-            # Create user once
+            # Create user with username (using email as username)
             user = User(
-                email=form.email.data,
+                username=form.email.data,
                 first_name=form.first_name.data,
-                last_name=form.last_name.data
+                last_name=form.last_name.data,
+                email=form.email.data,
+                role='STUDENT'
             )
             user.set_password(form.password.data)
             
             # Create profile
             profile = Profile(
                 user=user,
-                first_name=form.first_name.data,
-                last_name=form.last_name.data,
-                id_number=form.id_number.data
+                phone_number=form.phone_number.data,
+                id_number=form.id_number.data,
+                ward_id=form.ward_id.data if hasattr(form, 'ward_id') else None
             )
             
             db.session.add(user)
@@ -68,7 +75,7 @@ def register():
             
         except Exception as e:
             db.session.rollback()
-            flash('Error: Email or ID number already registered.', 'danger')
-            return redirect(url_for('auth.register'))
-    
+            flash('Registration failed. Please try again.', 'error')
+            print(f"Registration error: {str(e)}")  # For debugging
+            
     return render_template('auth/register.html', title='Register', form=form)

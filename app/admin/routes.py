@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.admin import bp
 from app.admin.forms import (BursaryProgramForm, WardForm, ApplicationReviewForm, 
-                           DocumentForm)
+                           DocumentForm, WardAdminForm)
 from app.models import (User, BursaryProgram, Ward, Application, 
                        ApplicationTimeline, Profile)
 from app.models import Document as DocumentModel
@@ -425,3 +425,85 @@ def ward_report(ward_id):
                          ward=ward,
                          stats=stats,
                          recent_applications=recent_applications)
+
+@bp.route('/ward-admins')
+@login_required
+@admin_required
+def ward_admins():
+    """List all ward admins"""
+    ward_admins = User.query.filter_by(role='WARD_ADMIN').all()
+    return render_template('admin/ward_admins.html', ward_admins=ward_admins)
+
+@bp.route('/ward-admin/new', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def new_ward_admin():
+    """Create a new ward admin"""
+    form = WardAdminForm()
+    
+    if form.validate_on_submit():
+        try:
+            ward_admin = User(
+                username=form.username.data,
+                email=form.email.data,
+                role='WARD_ADMIN',
+                ward_id=form.ward_id.data
+            )
+            ward_admin.set_password(form.password.data)
+            
+            db.session.add(ward_admin)
+            db.session.commit()
+            
+            flash('Ward admin created successfully!', 'success')
+            return redirect(url_for('admin.ward_admins'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating ward admin: {str(e)}', 'error')
+            
+    return render_template('admin/ward_admin_form.html', form=form, title='New Ward Admin')
+
+@bp.route('/ward-admin/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_ward_admin(id):
+    ward_admin = User.query.filter_by(id=id, role='WARD_ADMIN').first_or_404()
+    form = WardAdminForm(obj=ward_admin)
+    
+    if form.validate_on_submit():
+        try:
+            ward_admin.username = form.username.data
+            ward_admin.email = form.email.data
+            ward_admin.ward_id = form.ward_id.data
+            
+            db.session.commit()
+            flash('Ward admin updated successfully!', 'success')
+            return redirect(url_for('admin.ward_admins'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating ward admin: {str(e)}', 'error')
+    
+    return render_template('admin/ward_admin_form.html', form=form, ward_admin=ward_admin)
+
+@bp.route('/ward-admin/<int:id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_ward_admin(id):
+    ward_admin = User.query.filter_by(id=id, role='WARD_ADMIN').first_or_404()
+    
+    try:
+        # Check if ward admin has reviewed any applications
+        if ward_admin.reviewed_applications.count() > 0:
+            flash('Cannot delete ward admin who has reviewed applications.', 'error')
+            return redirect(url_for('admin.ward_admins'))
+        
+        db.session.delete(ward_admin)
+        db.session.commit()
+        flash('Ward admin deleted successfully!', 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting ward admin: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.ward_admins'))
