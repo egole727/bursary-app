@@ -9,29 +9,52 @@ from datetime import timedelta
 load_dotenv()
 
 class Config:
+    # Environment
+    ENV = os.environ.get('FLASK_ENV', 'production')
+    DEBUG = ENV == 'development'
+    TESTING = False
+    
     # Database settings
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # File Upload settings
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'uploads')
+    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
     ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
 
+    # Application Settings
     SECRET_KEY = os.environ.get('SECRET_KEY')
+    
+    # URL Configuration
+    if ENV == 'development':
+        SERVER_NAME = None
+        PREFERRED_URL_SCHEME = 'http'
+    else:
+        SERVER_NAME = None
+        PREFERRED_URL_SCHEME = 'https'
+    
+    # Security Settings
+    SESSION_COOKIE_SECURE = ENV != 'development'
+    REMEMBER_COOKIE_SECURE = ENV != 'development'
+    SESSION_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_HTTPONLY = True
     
     # JWT settings
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
 
     # HTTPS/SSL
-    SESSION_COOKIE_SECURE = True  # Cookies only sent over HTTPS
-    REMEMBER_COOKIE_SECURE = True
-    SESSION_COOKIE_HTTPONLY = True
+    CSRF_ENABLED = True
+    CSRF_SECRET_KEY = os.environ.get('CSRF_SECRET_KEY')
     
-    # CSRF Protection (you already have this)
-    WTF_CSRF_ENABLED = True
-    WTF_CSRF_SECRET_KEY = os.environ.get('WTF_CSRF_SECRET_KEY')
+    # Email Configuration
+    MAIL_SERVER = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+    MAIL_PORT = int(os.environ.get('MAIL_PORT', 587))
+    MAIL_USE_TLS = os.environ.get('MAIL_USE_TLS', 'true').lower() in ['true', 'on', '1']
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = os.environ.get('MAIL_DEFAULT_SENDER') or os.environ.get('MAIL_USERNAME')
     
     # Security Headers
     SECURITY_HEADERS = {
@@ -61,4 +84,3 @@ async def async_main() -> None:
     await engine.dispose()
 
 asyncio.run(async_main())
-    

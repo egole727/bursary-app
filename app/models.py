@@ -8,6 +8,9 @@ class User(UserMixin, db.Model):
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True, nullable=False)
+    email_verified = db.Column(db.Boolean, default=False)
+    email_verification_token = db.Column(db.String(100), unique=True)
+    email_verification_sent_at = db.Column(db.DateTime)
     password_hash = db.Column(db.String(256))  
     first_name = db.Column(db.String(64))
     last_name = db.Column(db.String(64))
