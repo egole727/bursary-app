@@ -3,6 +3,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
+from flask_mail import Mail
 from dotenv import load_dotenv
 from config import Config
 
@@ -10,7 +11,7 @@ load_dotenv()  # Load environment variables
 
 db = SQLAlchemy()
 login_manager = LoginManager()
-login_manager.login_view = 'auth.login'
+mail = Mail()
 migrate = Migrate()
 
 def create_app(config_class=Config):
@@ -20,7 +21,12 @@ def create_app(config_class=Config):
     # Initialize Flask extensions
     db.init_app(app)
     login_manager.init_app(app)
+    mail.init_app(app)
     migrate.init_app(app, db)
+
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'Please log in to access this page.'
+    login_manager.login_message_category = 'info'
 
     # Register blueprints
     from app.auth import bp as auth_bp
