@@ -28,15 +28,14 @@ class Config:
     
     # URL Configuration
     if ENV == 'development':
-        SERVER_NAME = None
-        PREFERRED_URL_SCHEME = 'http'
+        SERVER_NAME = None  # Let Flask handle it in development
     else:
-        SERVER_NAME = None
-        PREFERRED_URL_SCHEME = 'https'
+        SERVER_NAME = None  # Let Render.com handle it in production
     
     # Security Settings
-    SESSION_COOKIE_SECURE = ENV != 'development'
-    REMEMBER_COOKIE_SECURE = ENV != 'development'
+    PREFERRED_URL_SCHEME = 'https'  # Always prefer HTTPS
+    SESSION_COOKIE_SECURE = ENV == 'production'  # Secure cookies in production
+    REMEMBER_COOKIE_SECURE = ENV == 'production'
     SESSION_COOKIE_HTTPONLY = True
     REMEMBER_COOKIE_HTTPONLY = True
     

@@ -26,14 +26,18 @@ def send_verification_email(user, token):
         host = '127.0.0.1:5000'
         scheme = 'http'
     else:
-        host = 'bursary-app.onrender.com'  # Your Render.com domain
-        scheme = 'https'
-    
+        host = 'bursary-app.onrender.com'
+        scheme = 'https'  # Always use HTTPS for production
+
+    # Remove the _host parameter if it's the production domain
     verification_url = url_for('auth.verify_email',
                              token=token,
                              _external=True,
-                             _scheme=scheme,
-                             _host=host)
+                             _scheme=scheme)
+    
+    # Remove any unwanted query parameters
+    if '?_host=' in verification_url:
+        verification_url = verification_url.split('?_host=')[0]
     
     send_email('Verify Your Email - Bursary Application System',
               recipient=user.email,
