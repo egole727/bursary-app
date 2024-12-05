@@ -12,7 +12,7 @@
             <p>Fill in your details to get started</p>
         </div>
         
-        <form class="auth-form" method="POST" action="">
+        <form class="auth-form" method="POST" action="{{ url_for('auth.register') }}">
             {{ form.hidden_tag() }}
             
             <div class="row">
@@ -74,7 +74,7 @@
                             <div class="invalid-feedback">{{ error }}</div>
                         {% endfor %}
                     </div>
-                </div>
+                </div> 
                 <div class="col-md-6">
                     <div class="form-group">
                         {{ form.phone_number.label }}
@@ -94,7 +94,7 @@
                 {% endfor %}
             </div>
 
-            {{ form.submit(class="btn btn-submit") }}
+            {{ form.submit(class="btn btn-primary w-100") }}
         </form>
 
         <div class="auth-links">

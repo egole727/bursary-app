@@ -1,9 +1,9 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
-from wtforms import StringField, TextAreaField, DecimalField, DateField, SelectField, SubmitField
-from wtforms.validators import DataRequired, Length, NumberRange, ValidationError, Optional
+from wtforms import StringField, TextAreaField, DecimalField, DateField, SelectField, SubmitField, PasswordField, EmailField
+from wtforms.validators import DataRequired, Length, NumberRange, ValidationError, Optional, Email
 from datetime import date, datetime
-from app.models import Ward
+from app.models import Ward, User
 
 class BursaryProgramForm(FlaskForm):
     name = StringField('Program Name', validators=[DataRequired(), Length(max=200)])
@@ -52,3 +52,25 @@ class DocumentForm(FlaskForm):
         FileAllowed(['pdf', 'doc', 'docx'], 'Only PDF and Word documents are allowed!')
     ])
     submit = SubmitField('Upload Document')
+
+class WardAdminForm(FlaskForm):
+    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=64)])
+    email = EmailField('Email', validators=[DataRequired(), Email()])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
+    ward_id = SelectField('Ward', coerce=int, validators=[DataRequired()])
+
+    def __init__(self, *args, **kwargs):
+        super(WardAdminForm, self).__init__(*args, **kwargs)
+        self.ward_id.choices = [(0, 'Select Ward')] + [
+            (ward.id, ward.name) for ward in Ward.query.order_by(Ward.name).all()
+        ]
+
+    def validate_username(self, field):
+        user = User.query.filter_by(username=field.data).first()
+        if user:
+            raise ValidationError('Username already exists.')
+
+    def validate_email(self, field):
+        user = User.query.filter_by(email=field.data).first()
+        if user:
+            raise ValidationError('Email already registered.')

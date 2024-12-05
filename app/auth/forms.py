@@ -11,14 +11,16 @@ class LoginForm(FlaskForm):
     submit = SubmitField('Sign In')
 
 class RegistrationForm(FlaskForm):
+    first_name = StringField('First Name', validators=[DataRequired(), Length(min=2, max=50)])
+    last_name = StringField('Last Name', validators=[DataRequired(), Length(min=2, max=50)])
     email = StringField('Email', validators=[DataRequired(), Email()])
     password = PasswordField('Password', validators=[DataRequired()])
     password2 = PasswordField('Repeat Password', 
         validators=[DataRequired(), EqualTo('password')])
     first_name = StringField('First Name', validators=[DataRequired()])
     last_name = StringField('Last Name', validators=[DataRequired()])
-    id_number = StringField('Registration Number', validators=[DataRequired()])
-    phone_number = StringField('Phone Number', validators=[DataRequired(), Length(max=20)])
+    id_number = StringField('Registration Number', validators=[DataRequired(), Length(max=13)])
+    phone_number = StringField('Phone Number', validators=[DataRequired(), Length(min=10, max=20)])
     ward_id = SelectField('Ward', coerce=int, validators=[DataRequired()])
     submit = SubmitField('Register')
 
@@ -30,7 +32,6 @@ class RegistrationForm(FlaskForm):
         user = User.query.filter_by(email=email.data).first()
         if user is not None:
             raise ValidationError('Please use a different email address.')
-
     def validate_id_number(self, id_number):
         profile = Profile.query.filter_by(id_number=id_number.data).first()
         if profile is not None:
@@ -41,3 +42,4 @@ class RegistrationForm(FlaskForm):
         is_valid, message = validate_password(field.data)
         if not is_valid:
             raise ValidationError(message)
+

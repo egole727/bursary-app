@@ -14,6 +14,7 @@ def init_db():
         
         # Create an admin user
         admin = User(
+            username='admin',
             email='admin@example.com',
             first_name='Admin',
             last_name='User',
@@ -24,6 +25,7 @@ def init_db():
 
         # Create a student user
         student = User(
+            username='student',
             email='student@example.com',
             first_name='John',
             last_name='Doe',

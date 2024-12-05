@@ -1,0 +1,86 @@
+{% extends "ward_admin/base.html" %}
+
+{% block ward_admin_content %}
+<div class="container py-4">
+    <h2 class="mb-4">Ward Admin Dashboard</h2>
+    
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Applications</h5>
+                    <h2 class="mb-0">{{ stats.total_applications }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Applications</h5>
+                    <h2 class="mb-0">{{ stats.pending_applications }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Approved Applications</h5>
+                    <h2 class="mb-0">{{ stats.approved_applications }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total Allocated (KES)</h5>
+                    <h2 class="mb-0">{{ "{:,.2f}".format(stats.total_allocated) }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Applications -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">Recent Applications</h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Program</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for application in recent_applications %}
+                        <tr>
+                            <td>{{ application.applicant.first_name }} {{ application.applicant.last_name }}</td>
+                            <td>{{ application.program.name }}</td>
+                            <td>KES {{ "{:,.2f}".format(application.amount) }}</td>
+                            <td>
+                                <span class="badge bg-{{ 'warning' if application.status == 'PENDING' else 'success' if application.status == 'APPROVED' else 'danger' }}">
+                                    {{ application.status }}
+                                </span>
+                            </td>
+                            <td>{{ application.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <a href="{{ url_for('ward_admin.review_application', id=application.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-eye"></i> Review
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

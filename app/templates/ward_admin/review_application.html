@@ -1,0 +1,171 @@
+{% extends "ward_admin/base.html" %}
+
+{% block ward_admin_content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Application Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Student Name:</strong></div>
+                        <div class="col-md-8">
+                            {{ application.applicant.first_name }} {{ application.applicant.last_name }}
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Program:</strong></div>
+                        <div class="col-md-8">{{ application.program.name }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Amount Requested:</strong></div>
+                        <div class="col-md-8">KES {{ "{:,.2f}".format(application.amount) }}</div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Current Status:</strong></div>
+                        <div class="col-md-8">
+                            <span class="badge bg-{{ 'warning' if application.status == 'PENDING' 
+                                                else 'success' if application.status == 'APPROVED' 
+                                                else 'danger' }}">
+                                {{ application.status }}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="row mb-3">
+                        <div class="col-md-4"><strong>Reason:</strong></div>
+                        <div class="col-md-8">{{ application.reason }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents Card -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Supporting Documents</h5>
+                </div>
+                <div class="card-body">
+                    {% if documents %}
+                        <div class="list-group">
+                            {% for document in documents %}
+                            <a href="{{ url_for('ward_admin.view_document', doc_id=document.id) }}" 
+                               class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                               target="_blank">
+                                <div>
+                                    <i class="fas fa-file-alt me-2"></i>
+                                    {{ document.type }}
+                                </div>
+                                <span class="badge bg-primary rounded-pill">
+                                    <i class="fas fa-download"></i>
+                                </span>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted mb-0">No documents uploaded for this application.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Review Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Review Application</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status(class="form-select") }}
+                            {% for error in form.status.errors %}
+                                <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.comments.label(class="form-label") }}
+                            {{ form.comments(class="form-control", rows=4) }}
+                            {% for error in form.comments.errors %}
+                                <span class="text-danger">{{ error }}</span>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                Submit Review
+                            </button>
+                            <a href="{{ url_for('ward_admin.applications') }}" class="btn btn-secondary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Application Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for entry in application.timeline %}
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-{{ 'warning' if entry.status == 'PENDING' 
+                                                        else 'success' if entry.status == 'APPROVED' 
+                                                        else 'danger' }}">
+                            </div>
+                            <div class="timeline-content">
+                                <h6 class="mb-0">{{ entry.status }}</h6>
+                                <p class="text-muted mb-0">{{ entry.comment }}</p>
+                                <small>{{ entry.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .timeline {
+        position: relative;
+        padding: 20px 0;
+    }
+    .timeline-item {
+        position: relative;
+        padding-left: 40px;
+        margin-bottom: 20px;
+    }
+    .timeline-marker {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+    }
+    .timeline-content {
+        padding: 10px;
+        border-left: 2px solid #dee2e6;
+    }
+    
+    /* Add styles for document list */
+    .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+    .list-group-item .badge {
+        transition: all 0.2s;
+    }
+    .list-group-item:hover .badge {
+        transform: scale(1.1);
+    }
+</style>
+{% endblock %} 
