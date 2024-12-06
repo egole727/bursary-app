@@ -44,3 +44,27 @@ def send_verification_email(user, token):
               template='auth/email/verify_email.html',
               user=user,
               verification_url=verification_url)
+
+def send_password_reset_email(user, token):
+    # Get the host from the request context or use a default
+    if current_app.config['ENV'] == 'development':
+        host = '127.0.0.1:5000'
+        scheme = 'http'
+    else:
+        host = 'bursary-app.onrender.com'
+        scheme = 'https'  # Always use HTTPS for production
+
+    reset_url = url_for('auth.reset_password',
+                       token=token,
+                       _external=True,
+                       _scheme=scheme)
+    
+    # Remove any unwanted query parameters
+    if '?_host=' in reset_url:
+        reset_url = reset_url.split('?_host=')[0]
+    
+    send_email('Reset Your Password - Bursary Application System',
+              recipient=user.email,
+              template='auth/email/reset_password.html',
+              user=user,
+              reset_url=reset_url)

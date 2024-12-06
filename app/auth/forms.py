@@ -43,3 +43,30 @@ class RegistrationForm(FlaskForm):
         if not is_valid:
             raise ValidationError(message)
 
+
+class ForgotPasswordForm(FlaskForm):
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    submit = SubmitField('Send Reset Link')
+
+    def validate_email(self, email):
+        user = User.query.filter_by(email=email.data).first()
+        if user is None:
+            raise ValidationError('No account found with that email address.')
+
+
+class ResetPasswordForm(FlaskForm):
+    password = PasswordField('New Password', validators=[
+        DataRequired(),
+        Length(min=8, message='Password must be at least 8 characters long')
+    ])
+    password2 = PasswordField('Confirm New Password', validators=[
+        DataRequired(),
+        EqualTo('password', message='Passwords must match')
+    ])
+    submit = SubmitField('Reset Password')
+
+    def validate_password(self, field):
+        """Validate password strength"""
+        is_valid, message = validate_password(field.data)
+        if not is_valid:
+            raise ValidationError(message)
