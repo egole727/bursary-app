@@ -1,18 +1,22 @@
 from flask import render_template, redirect, url_for, flash, request, current_app
 from flask_login import login_user, logout_user, current_user, login_required
 from urllib.parse import urlparse
-from datetime import datetime
+from datetime import datetime, timedelta
 from app import db
 from app.auth import bp
-from app.auth.forms import LoginForm, RegistrationForm
+from app.auth.forms import LoginForm, RegistrationForm, ForgotPasswordForm, ResetPasswordForm
 from app.models import User, Profile, Ward
-from app.email import send_verification_email
+from app.email import send_verification_email, send_password_reset_email
 from sqlalchemy.exc import IntegrityError
 from itsdangerous import URLSafeTimedSerializer, SignatureExpired, BadTimeSignature
 
 def generate_verification_token(email):
     serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
     return serializer.dumps(email, salt='email-verification')
+
+def generate_password_reset_token(email):
+    serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+    return serializer.dumps(email, salt='password-reset')
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
@@ -206,3 +210,66 @@ def register():
             return redirect(url_for('auth.register'))
     
     return render_template('auth/register.html', title='Register', form=form)
+
+@bp.route('/forgot-password', methods=['GET', 'POST'])
+def forgot_password():
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    form = ForgotPasswordForm()
+    if form.validate_on_submit():
+        user = User.query.filter_by(email=form.email.data).first()
+        if user:
+            token = generate_password_reset_token(user.email)
+            user.password_reset_token = token
+            user.password_reset_expires = datetime.utcnow() + timedelta(hours=24)
+            db.session.commit()
+            
+            try:
+                send_password_reset_email(user, token)
+                flash('Check your email for instructions to reset your password.', 'info')
+            except Exception as e:
+                print(f"Error sending password reset email: {str(e)}")
+                flash('Error sending password reset email. Please try again later.', 'error')
+            
+            return redirect(url_for('auth.login'))
+        
+        flash('If an account exists with that email, a password reset link has been sent.', 'info')
+        return redirect(url_for('auth.login'))
+    
+    return render_template('auth/forgot_password.html', title='Reset Password', form=form)
+
+@bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_password(token):
+    if current_user.is_authenticated:
+        return redirect(url_for('main.index'))
+    
+    try:
+        serializer = URLSafeTimedSerializer(current_app.config['SECRET_KEY'])
+        email = serializer.loads(token, salt='password-reset', max_age=86400)  # 24 hours
+        user = User.query.filter_by(email=email).first()
+        
+        if user is None:
+            flash('Invalid or expired reset link.', 'error')
+            return redirect(url_for('auth.forgot_password'))
+        
+        if (user.password_reset_token != token or 
+            user.password_reset_expires is None or 
+            user.password_reset_expires < datetime.utcnow()):
+            flash('Invalid or expired reset link.', 'error')
+            return redirect(url_for('auth.forgot_password'))
+        
+    except (SignatureExpired, BadTimeSignature):
+        flash('Invalid or expired reset link.', 'error')
+        return redirect(url_for('auth.forgot_password'))
+    
+    form = ResetPasswordForm()
+    if form.validate_on_submit():
+        user.set_password(form.password.data)
+        user.password_reset_token = None
+        user.password_reset_expires = None
+        db.session.commit()
+        flash('Your password has been reset.', 'success')
+        return redirect(url_for('auth.login'))
+    
+    return render_template('auth/reset_password.html', title='Reset Password', form=form)
