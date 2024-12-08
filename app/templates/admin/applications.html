@@ -71,7 +71,13 @@
                                 <small class="text-muted">{{ application.applicant.email }}</small>
                             </td>
                             <td>{{ application.program.name }}</td>
-                            <td>{{ application.applicant.profile.ward.name }}</td>
+                            <td>
+                                {% if application.applicant.profile and application.applicant.profile.ward %}
+                                    {{ application.applicant.profile.ward.name }}
+                                {% else %}
+                                    <span class="text-muted">Not Assigned</span>
+                                {% endif %}
+                            </td>
                             <td>
                                 <span class="badge {% if application.status == 'PENDING' %}bg-warning
                                                  {% elif application.status == 'APPROVED' %}bg-success
