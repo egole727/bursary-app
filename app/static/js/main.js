@@ -1,27 +1,33 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Sidebar Toggle
-    const sidebarToggles = document.querySelectorAll('.sidebar-toggle');
-    const sidebar = document.querySelector('.sidebar');
-    const mainWrapper = document.querySelector('.main-wrapper');
-    const navbar = document.querySelector('.navbar');
-
-    sidebarToggles.forEach(toggle => {
-        toggle.addEventListener('click', function() {
+    // Create backdrop element
+    const backdrop = document.createElement('div');
+    backdrop.className = 'sidebar-backdrop';
+    document.body.appendChild(backdrop);
+    
+    // Handle sidebar toggle
+    const toggles = document.querySelectorAll('.sidebar-toggle');
+    toggles.forEach(toggle => {
+        toggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.body.classList.toggle('sidebar-open');
+            const sidebar = document.querySelector('.sidebar');
             sidebar.classList.toggle('show');
-            mainWrapper.classList.toggle('sidebar-open');
-            navbar.classList.toggle('sidebar-open');
         });
     });
-
-    // Close sidebar when clicking outside on mobile
-    document.addEventListener('click', function(event) {
-        if (window.innerWidth < 992 && 
-            !event.target.closest('.sidebar') && 
-            !event.target.closest('.sidebar-toggle') && 
-            sidebar.classList.contains('show')) {
+    
+    // Close sidebar when clicking backdrop
+    backdrop.addEventListener('click', function() {
+        document.body.classList.remove('sidebar-open');
+        const sidebar = document.querySelector('.sidebar');
+        sidebar.classList.remove('show');
+    });
+    
+    // Close sidebar on window resize if in mobile view
+    window.addEventListener('resize', function() {
+        if (window.innerWidth >= 992) {
+            document.body.classList.remove('sidebar-open');
+            const sidebar = document.querySelector('.sidebar');
             sidebar.classList.remove('show');
-            mainWrapper.classList.remove('sidebar-open');
-            navbar.classList.remove('sidebar-open');
         }
     });
 

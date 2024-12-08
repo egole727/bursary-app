@@ -133,39 +133,3 @@
 </div>
 {% endblock %}
 
-{% block extra_css %}
-<style>
-    .timeline {
-        position: relative;
-        padding: 20px 0;
-    }
-    .timeline-item {
-        position: relative;
-        padding-left: 40px;
-        margin-bottom: 20px;
-    }
-    .timeline-marker {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 15px;
-        height: 15px;
-        border-radius: 50%;
-    }
-    .timeline-content {
-        padding: 10px;
-        border-left: 2px solid #dee2e6;
-    }
-    
-    /* Add styles for document list */
-    .list-group-item:hover {
-        background-color: #f8f9fa;
-    }
-    .list-group-item .badge {
-        transition: all 0.2s;
-    }
-    .list-group-item:hover .badge {
-        transform: scale(1.1);
-    }
-</style>
-{% endblock %} 
