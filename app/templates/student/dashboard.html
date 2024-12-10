@@ -5,13 +5,19 @@
 {% block content %}
 <div class="container-fluid">
     <div class="row">
-        <!-- Profile Status -->
-        {% if not current_user.profile %}
+        <!-- Profile Status Checks -->
+        {% if not current_user.profile or not current_user.academic_info %}
         <div class="col-12 mb-4">
             <div class="alert alert-warning" role="alert">
-                <h4 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Complete Your Profile</h4>
-                <p class="mb-0">Please complete your profile before applying for bursaries. 
-                   <a href="{{ url_for('student.profile') }}" class="alert-link">Complete Profile</a>
+                <h4 class="alert-heading"><i class="fas fa-exclamation-triangle me-2"></i>Complete Your Information</h4>
+                <p class="mb-0">
+                    {% if not current_user.profile %}
+                    Please complete your profile before applying for bursaries.<br>
+                    {% endif %}
+                    {% if not current_user.academic_info %}
+                    Please add your academic information before applying for bursaries.<br>
+                    {% endif %}
+                    <a href="{{ url_for('student.profile') }}" class="alert-link">Complete Profile</a>
                 </p>
             </div>
         </div>

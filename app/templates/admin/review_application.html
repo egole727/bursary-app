@@ -19,7 +19,14 @@
                             <p class="mb-1"><strong>Email:</strong> {{ application.applicant.email }}</p>
                             <p class="mb-1"><strong>ID Number:</strong> {{ application.applicant.profile.id_number }}</p>
                             <p class="mb-1"><strong>Phone:</strong> {{ application.applicant.profile.phone_number }}</p>
-                            <p class="mb-0"><strong>Ward:</strong> {{ application.applicant.profile.ward.name }}</p>
+                            <p class="mb-0">
+                                <strong>Ward:</strong> 
+                                {% if application.applicant.profile and application.applicant.profile.ward %}
+                                    {{ application.applicant.profile.ward.name }}
+                                {% else %}
+                                    <span class="text-muted">Not Assigned</span>
+                                {% endif %}
+                            </p>
                         </div>
                         <div class="col-md-6">
                             <h5>Program Information</h5>

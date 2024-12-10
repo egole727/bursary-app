@@ -7,13 +7,20 @@ from flask_wtf.file import FileRequired, FileAllowed
 from app.models import Ward, Profile, AcademicInfo
 
 class ProfileForm(FlaskForm):
-    first_name = StringField('First Name', validators=[DataRequired(), Length(max=50)])
-    last_name = StringField('Last Name', validators=[DataRequired(), Length(max=50)])
-    date_of_birth = DateField('Date of Birth', validators=[DataRequired()])
-    gender = SelectField('Gender', choices=[('M', 'Male'), ('F', 'Female'), ('O', 'Other')])
-    phone_number = StringField('Phone Number', validators=[DataRequired(), Length(max=15)])
+    first_name = StringField('First Name', validators=[DataRequired()])
+    last_name = StringField('Last Name', validators=[DataRequired()])
+    phone_number = StringField('Phone Number', validators=[DataRequired()])
+    id_number = StringField('ID Number', validators=[DataRequired()])
     ward_id = SelectField('Ward', coerce=int, validators=[DataRequired()])
-    id_number = StringField('ID Number', validators=[DataRequired(), Length(max=15)])
+    gender = SelectField('Gender', choices=[('M', 'Male'), ('F', 'Female'), ('O', 'Other')])
+
+    def populate_from_profile(self, profile):
+        if profile:
+            self.first_name.data = profile.first_name
+            self.last_name.data = profile.last_name
+            self.phone_number.data = profile.phone_number
+            self.id_number.data = profile.id_number
+            self.ward_id.data = profile.ward_id
 
     def validate_phone_number(self, field):
         profile = Profile.query.filter_by(phone_number=field.data).first()
@@ -27,16 +34,44 @@ class ProfileForm(FlaskForm):
         ]
 
 class AcademicInfoForm(FlaskForm):
-    school_name = StringField('School Name', validators=[DataRequired(), Length(max=200)])
-    current_grade = StringField('Current Grade/Year', validators=[DataRequired(), Length(max=50)])
-    institution = StringField('Institution Name', validators=[DataRequired(), Length(max=100)])
-    course = StringField('Course Name', validators=[DataRequired(), Length(max=100)])
-    year_of_study = SelectField('Year of Study', 
-                              choices=[(1, '1st Year'), (2, '2nd Year'), 
-                                     (3, '3rd Year'), (4, '4th Year'),
-                                     (5, '5th Year'), (6, '6th Year')],
-                              coerce=int)
-    student_id = StringField('Student ID', validators=[DataRequired(), Length(max=20)])
+    # Institution Details
+    institution_name = StringField('Institution Name', validators=[DataRequired()])
+    education_level = SelectField('Education Level', 
+                                choices=[
+                                    ('secondary', 'Secondary School'),
+                                    ('college', 'College'),
+                                    ('university', 'University')
+                                ],
+                                validators=[DataRequired()])
+    year_of_study = SelectField('Year of Study',
+                               choices=[
+                                   ('1', 'First Year'),
+                                   ('2', 'Second Year'),
+                                   ('3', 'Third Year'),
+                                   ('4', 'Fourth Year'),
+                                   ('5', 'Fifth Year'),
+                                   ('6', 'Sixth Year')
+                               ],
+                               validators=[DataRequired()])
+    student_id = StringField('Student ID/Admission Number', validators=[DataRequired()])
+    course = StringField('Course/Program', validators=[Optional()])
+    current_grade = StringField('Current Grade/Performance', validators=[Optional()])
+    
+    # Banking Details
+    school_account_number = StringField('School Account Number', validators=[DataRequired()])
+    bank_name = StringField('Bank Name', validators=[DataRequired()])
+    bank_branch = StringField('Bank Branch', validators=[DataRequired()])
+
+    def populate_from_academic_info(self, academic_info):
+        if academic_info:
+            self.institution_name.data = academic_info.institution_name
+            self.education_level.data = academic_info.education_level
+            self.year_of_study.data = str(academic_info.year_of_study)
+            self.student_id.data = academic_info.student_id
+            self.course.data = academic_info.course
+            self.school_account_number.data = academic_info.school_account_number
+            self.bank_name.data = academic_info.bank_name
+            self.bank_branch.data = academic_info.bank_branch
 
     def validate_student_id(self, field):
         academic = AcademicInfo.query.filter_by(student_id=field.data).first()

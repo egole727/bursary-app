@@ -83,11 +83,6 @@ class Profile(db.Model):
     ward_id = db.Column(db.Integer, db.ForeignKey('ward.id', name='fk_profile_ward'))
     id_number = db.Column(db.String(10), unique=True, nullable=False)
     
-    # # Add check constraints to ensure only digits for both fields
-    # __table_args__ = (
-    #     CheckConstraint('id_number ~ \'^[0-9]+$\'', name='check_id_number_digits'),
-    #     CheckConstraint('phone_number ~ \'^[0-9]+$\'', name='check_phone_number_digits'),
-    # )
 
 class Ward(db.Model):
     __tablename__ = 'ward'
@@ -149,14 +144,28 @@ class Document(db.Model):
 
 class AcademicInfo(db.Model):
     __tablename__ = 'academic_info'
+    
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), unique=True)
-    institution = db.Column(db.String(200), nullable=False)
-    course = db.Column(db.String(100), nullable=False)
-    year_of_study = db.Column(db.Integer, nullable=False)
-    student_id = db.Column(db.String(20), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    
+    # Institution Details
+    institution_name = db.Column(db.String(255), nullable=False)
+    education_level = db.Column(db.String(50), nullable=False)
+    year_of_study = db.Column(db.String(20), nullable=False)
+    student_id = db.Column(db.String(50), nullable=False)
+    course = db.Column(db.String(255), nullable=True)  # Optional for primary/secondary students
+    
+    # Banking Details
+    school_account_number = db.Column(db.String(50), nullable=False)
+    bank_name = db.Column(db.String(100), nullable=False)
+    bank_branch = db.Column(db.String(100), nullable=False)
+    
+    # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<AcademicInfo {self.institution_name}>'
 
 class ApplicationTimeline(db.Model):
     __tablename__ = 'application_timeline'
