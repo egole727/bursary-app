@@ -2,6 +2,7 @@ import logging
 from logging.config import fileConfig
 
 from flask import current_app
+from app.models import User, AcademicInfo, Profile, Application, Ward, Document, BursaryProgram
 
 from alembic import context
 

@@ -67,67 +67,55 @@ def dashboard():
 @login_required
 @student_required
 def profile():
-    # Initialize forms
     profile_form = ProfileForm()
     academic_form = AcademicInfoForm()
-
-    # Get or create profile and academic info
+    
+    # Get existing profile and academic info
     profile = Profile.query.filter_by(user_id=current_user.id).first()
-    academic = AcademicInfo.query.filter_by(user_id=current_user.id).first()
-
-    if request.method == 'POST':
-        print("Form submitted:", request.form)  # Debug print
-        
-        if 'submit_profile' in request.form:
-            if profile_form.validate():
-                try:
-                    if not profile:
-                        profile = Profile(user_id=current_user.id)
-                        print("Creating new profile")
-                    else:
-                        print("Updating existing profile")
-
-                    # Update profile data
-                    profile.first_name = profile_form.first_name.data
-                    profile.last_name = profile_form.last_name.data
-                    profile.phone_number = profile_form.phone_number.data
-                    profile.date_of_birth = profile_form.date_of_birth.data
-                    profile.gender = profile_form.gender.data
-                    profile.ward_id = profile_form.ward_id.data
-                    profile.id_number = profile_form.id_number.data
-
-                    db.session.add(profile)
-                    db.session.commit()
-                    flash('Profile updated successfully!', 'success')
-                    print("Profile saved successfully")
-                    
-                    # Redirect after successful update
-                    return redirect(url_for('student.dashboard'))
-
-                except Exception as e:
-                    db.session.rollback()
-                    flash(f'Error updating profile: {str(e)}', 'error')
-                    print(f"Error updating profile: {str(e)}")
-            else:
-                print("Profile form validation errors:", profile_form.errors)
-                for field, errors in profile_form.errors.items():
-                    for error in errors:
-                        flash(f'{field}: {error}', 'error')
-
-    elif request.method == 'GET':
+    academic_info = AcademicInfo.query.filter_by(user_id=current_user.id).first()
+    
+    if request.method == 'GET':
         if profile:
-            # Populate profile form with existing data
-            profile_form.first_name.data = profile.first_name
-            profile_form.last_name.data = profile.last_name
-            profile_form.phone_number.data = profile.phone_number
-            profile_form.date_of_birth.data = profile.date_of_birth
-            profile_form.gender.data = profile.gender
-            profile_form.ward_id.data = profile.ward_id
-            profile_form.id_number.data = profile.id_number
-
+            profile_form.populate_from_profile(profile)
+        if academic_info:
+            academic_form.populate_from_academic_info(academic_info)
+    
     return render_template('student/profile.html',
                          profile_form=profile_form,
-                         academic_form=academic_form)
+                         academic_form=academic_form,
+                         profile=profile,
+                         academic_info=academic_info)
+
+@bp.route('/update_academic_info', methods=['POST'])
+@login_required
+@student_required
+def update_academic_info():
+    form = AcademicInfoForm()
+    if form.validate_on_submit():
+        academic_info = AcademicInfo.query.filter_by(user_id=current_user.id).first()
+        if not academic_info:
+            academic_info = AcademicInfo(user_id=current_user.id)
+        
+        # Update all fields
+        academic_info.institution_name = form.institution_name.data
+        academic_info.education_level = form.education_level.data
+        academic_info.year_of_study = form.year_of_study.data
+        academic_info.student_id = form.student_id.data
+        academic_info.course = form.course.data
+        academic_info.school_account_number = form.school_account_number.data
+        academic_info.bank_name = form.bank_name.data
+        academic_info.bank_branch = form.bank_branch.data
+        
+        db.session.add(academic_info)
+        db.session.commit()
+        
+        flash('Academic information updated successfully!', 'success')
+    else:
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'{getattr(form, field).label.text}: {error}', 'error')
+    
+    return redirect(url_for('student.dashboard'))
 
 def allowed_file(filename):
     """Check if the file is a PDF."""
@@ -296,25 +284,31 @@ def applications():
 @login_required
 @student_required
 def programs():
-    """View all available and upcoming bursary programs."""
-    today = datetime.utcnow()
+    # Get current datetime for comparison
+    current_date = datetime.utcnow()
     
-    # Get available programs (current date is between start_date and end_date)
+    # Get available bursary programs for student's ward AND programs available to all wards
     available_programs = BursaryProgram.query.filter(
-        BursaryProgram.start_date <= today,
-        BursaryProgram.end_date >= today,
-        BursaryProgram.ward_id == current_user.profile.ward_id,
-        BursaryProgram.status == 'ACTIVE'
+        (
+            (BursaryProgram.ward_id == current_user.profile.ward_id) |
+            (BursaryProgram.ward_id == None)  # Programs available to all wards
+        ),
+        BursaryProgram.status == 'ACTIVE',
+        BursaryProgram.start_date <= current_date,
+        BursaryProgram.end_date >= current_date
     ).order_by(BursaryProgram.end_date.asc()).all()
     
-    # Get upcoming programs (start_date is in the future)
+    # Get upcoming programs (including those available to all wards)
     upcoming_programs = BursaryProgram.query.filter(
-        BursaryProgram.start_date > today,
-        BursaryProgram.ward_id == current_user.profile.ward_id,
-        BursaryProgram.status == 'ACTIVE'
+        (
+            (BursaryProgram.ward_id == current_user.profile.ward_id) |
+            (BursaryProgram.ward_id == None)  # Programs available to all wards
+        ),
+        BursaryProgram.status == 'ACTIVE',
+        BursaryProgram.start_date > current_date
     ).order_by(BursaryProgram.start_date.asc()).all()
     
-    return render_template('student/programs.html', 
+    return render_template('student/programs.html',
                          available_programs=available_programs,
                          upcoming_programs=upcoming_programs)
 
