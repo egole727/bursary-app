@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired, FileAllowed
-from wtforms import StringField, TextAreaField, DecimalField, DateField, SelectField, SubmitField, PasswordField, EmailField
+from wtforms import StringField, TextAreaField, DecimalField, DateField, SelectField, SubmitField, PasswordField, EmailField, FloatField
 from wtforms.validators import DataRequired, Length, NumberRange, ValidationError, Optional, Email
 from datetime import date, datetime
 from app.models import Ward, User
@@ -35,14 +35,17 @@ class WardForm(FlaskForm):
     submit = SubmitField('Submit')
 
 class ApplicationReviewForm(FlaskForm):
-    status = SelectField('Decision', choices=[
-        ('APPROVED', 'Approve Application'),
-        ('REJECTED', 'Reject Application'),
-        ('PENDING', 'Keep Pending'),
-        ('INFO_REQUESTED', 'Request More Information')
-    ], validators=[DataRequired()])
-    comments = TextAreaField('Comments', validators=[DataRequired(), Length(min=10)])
-    submit = SubmitField('Submit Review')
+    amount_allocated = FloatField('Amount to Allocate', 
+                                validators=[DataRequired(), NumberRange(min=0)])
+    status = SelectField('Status', 
+                        choices=[
+                            ('PENDING', 'Pending'),
+                            ('APPROVED', 'Approve'),
+                            ('REJECTED', 'Reject')
+                        ],
+                        validators=[DataRequired()])
+    review_note = TextAreaField('Review Notes', 
+                              validators=[Optional(), Length(max=500)])
 
 class DocumentForm(FlaskForm):
     name = StringField('Document Name', validators=[DataRequired(), Length(max=100)])

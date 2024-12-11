@@ -1,107 +1,125 @@
 {% extends "admin/base.html" %}
 
-{% block title %}Review Application{% endblock %}
-
 {% block content %}
-<div class="container-fluid py-4">
+<div class="container py-4">
     <div class="row">
-        <!-- Application Details -->
         <div class="col-md-8">
             <div class="card mb-4">
                 <div class="card-header">
-                    <h4 class="mb-0">Application Details</h4>
+                    <h5 class="mb-0">Application Review</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row mb-4">
-                        <div class="col-md-6">
-                            <h5>Student Information</h5>
-                            <p class="mb-1"><strong>Name:</strong> {{ application.applicant.first_name }} {{ application.applicant.last_name }}</p>
-                            <p class="mb-1"><strong>Email:</strong> {{ application.applicant.email }}</p>
-                            <p class="mb-1"><strong>ID Number:</strong> {{ application.applicant.profile.id_number }}</p>
-                            <p class="mb-1"><strong>Phone:</strong> {{ application.applicant.profile.phone_number }}</p>
-                            <p class="mb-0">
-                                <strong>Ward:</strong> 
-                                {% if application.applicant.profile and application.applicant.profile.ward %}
+                    <!-- Application Details -->
+                    <div class="mb-4">
+                        <h6>Student Information</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p class="mb-1">
+                                    <strong>Name:</strong> 
+                                    {{ application.applicant.first_name }} {{ application.applicant.last_name }}
+                                </p>
+                                <p class="mb-0">
+                                    <strong>Ward:</strong> 
                                     {{ application.applicant.profile.ward.name }}
-                                {% else %}
-                                    <span class="text-muted">Not Assigned</span>
-                                {% endif %}
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <h5>Program Information</h5>
-                            <p class="mb-1"><strong>Program:</strong> {{ application.program.name }}</p>
-                            <p class="mb-1"><strong>Amount:</strong> KES {{ "{:,.2f}".format(application.program.amount) }}</p>
-                            <p class="mb-1"><strong>Submission Date:</strong> {{ application.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
-                            <p class="mb-0"><strong>Status:</strong> 
-                                <span class="badge {% if application.status == 'PENDING' %}bg-warning
-                                                 {% elif application.status == 'APPROVED' %}bg-success
-                                                 {% elif application.status == 'REJECTED' %}bg-danger
-                                                 {% endif %}">
-                                    {{ application.status }}
-                                </span>
-                            </p>
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <p class="mb-1">
+                                    <strong>Program:</strong> {{ application.program.name }}
+                                </p>
+                                <p class="mb-0">
+                                    <strong>Requested Amount:</strong> 
+                                    KES {{ "{:,.2f}".format(application.amount_requested) }}
+                                </p>
+                            </div>
                         </div>
                     </div>
 
-                    <h5>Academic Information</h5>
-                    <div class="table-responsive mb-4">
-                        <table class="table table-bordered">
-                            <tr>
-                                <th>School Name</th>
-                                <td>{{ application.applicant.academic_info.school_name }}</td>
-                            </tr>
-                            <tr>
-                                <th>Current Grade/Level</th>
-                                <td>{{ application.applicant.academic_info.current_grade }}</td>
-                            </tr>
-                        </table>
-                    </div>
-
-                    {% if application.documents %}
-                    <h5>Submitted Documents</h5>
-                    <div class="list-group mb-4">
-                        {% for doc in application.documents %}
-                        <a href="{{ url_for('admin.download_document', document_id=doc.id) }}" class="list-group-item list-group-item-action">
-                            <i class="fas fa-file me-2"></i>
-                            {{ doc.name }}
-                            <small class="text-muted ms-2">({{ doc.file_type }})</small>
-                        </a>
-                        {% endfor %}
-                    </div>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-
-        <!-- Review Form -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0">Review Decision</h4>
-                </div>
-                <div class="card-body">
+                    <!-- Review Form -->
                     <form method="POST">
-                        {{ form.hidden_tag() }}
+                        {{ form.csrf_token }}
                         
+                        <div class="mb-3">
+                            {{ form.amount_allocated.label(class="form-label") }}
+                            {{ form.amount_allocated(class="form-control", 
+                                                   min="0", 
+                                                   max=application.program.amount,
+                                                   step="0.01") }}
+                            <div class="form-text">
+                                Maximum available: KES {{ "{:,.2f}".format(application.program.amount) }}
+                            </div>
+                            {% for error in form.amount_allocated.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
+                            {% endfor %}
+                        </div>
+
                         <div class="mb-3">
                             {{ form.status.label(class="form-label") }}
                             {{ form.status(class="form-select") }}
                             {% for error in form.status.errors %}
-                                <span class="text-danger">{{ error }}</span>
+                                <div class="invalid-feedback d-block">{{ error }}</div>
                             {% endfor %}
                         </div>
 
                         <div class="mb-3">
-                            {{ form.comments.label(class="form-label") }}
-                            {{ form.comments(class="form-control", rows=5) }}
-                            {% for error in form.comments.errors %}
-                                <span class="text-danger">{{ error }}</span>
+                            {{ form.review_note.label(class="form-label") }}
+                            {{ form.review_note(class="form-control", rows="3") }}
+                            {% for error in form.review_note.errors %}
+                                <div class="invalid-feedback d-block">{{ error }}</div>
                             {% endfor %}
                         </div>
 
-                        {{ form.submit(class="btn btn-primary w-100") }}
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                Submit Review
+                            </button>
+                            <a href="{{ url_for('admin.applications') }}" class="btn btn-secondary">
+                                Back to Applications
+                            </a>
+                        </div>
                     </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Supporting Documents -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Supporting Documents</h5>
+                </div>
+                <div class="card-body">
+                    <div class="list-group">
+                        {% for doc in application.documents %}
+                        <a href="{{ url_for('static', filename='uploads/' + doc.url) }}" 
+                           class="list-group-item list-group-item-action"
+                           target="_blank">
+                            <i class="fas fa-file-pdf me-2"></i>{{ doc.url }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Application Timeline -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Application Timeline</h5>
+                </div>
+                <div class="card-body">
+                    <div class="timeline">
+                        {% for entry in application.timeline %}
+                        <div class="timeline-item">
+                            <div class="timeline-date">{{ entry.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                            <div class="timeline-content">
+                                <h6>{{ entry.action }}</h6>
+                                {% if entry.notes %}
+                                <p class="mb-0">{{ entry.notes }}</p>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
         </div>

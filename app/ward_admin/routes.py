@@ -2,7 +2,7 @@ from flask import render_template, redirect, url_for, flash, request, send_from_
 from flask_login import login_required, current_user
 from app import db
 from app.ward_admin import bp
-from app.models import Application, User, Ward, BursaryProgram, ApplicationTimeline, Document
+from app.models import Application, User, Ward, BursaryProgram, ApplicationTimeline, Document, AcademicInfo
 from app.decorators import ward_admin_required
 from app.admin.forms import ApplicationReviewForm
 import os
@@ -10,6 +10,7 @@ import csv
 import io
 import pandas as pd
 from datetime import datetime
+from sqlalchemy.sql import func
 
 @bp.route('/dashboard')
 @login_required
@@ -27,7 +28,7 @@ def dashboard():
             ward_id=current_user.ward_id, 
             status='APPROVED'
         ).count(),
-        'total_allocated': db.session.query(db.func.sum(Application.amount))\
+        'total_allocated': db.session.query(func.sum(Application.amount_allocated))\
             .filter_by(ward_id=current_user.ward_id, status='APPROVED')\
             .scalar() or 0
     }
@@ -54,35 +55,49 @@ def applications():
         .all()
     return render_template('ward_admin/applications.html', applications=applications)
 
-@bp.route('/application/<int:id>/review', methods=['GET', 'POST'])
+@bp.route('/applications/<int:application_id>/review', methods=['GET', 'POST'])
 @login_required
 @ward_admin_required
-def review_application(id):
-    """Review a specific application"""
-    application = Application.query\
-        .filter_by(id=id, ward_id=current_user.ward_id)\
-        .first_or_404()
-    
+def review_application(application_id):
+    application = Application.query.get_or_404(application_id)
     form = ApplicationReviewForm()
-    
+
     if form.validate_on_submit():
-        application.status = form.status.data
-        application.review_note = form.comments.data
-        application.reviewed_by = current_user.id
+        try:
+            # Validate allocation amount
+            application.validate_allocation(form.amount_allocated.data)
+            
+            # Update application
+            application.amount_allocated = form.amount_allocated.data
+            application.status = form.status.data
+            application.review_note = form.review_note.data
+            application.reviewed_by = current_user.id
+            application.updated_at = datetime.utcnow()
+
+            # Create timeline entry
+            timeline_entry = ApplicationTimeline(
+                application_id=application.id,
+                action=f"Application {form.status.data.lower()} by Ward Admin",
+                notes=f"Amount allocated: KES {form.amount_allocated.data:,.2f}\n{form.review_note.data if form.review_note.data else ''}",
+                created_at=datetime.utcnow()
+            )
+            
+            db.session.add(timeline_entry)
+            db.session.commit()
+            
+            flash(f'Application has been {form.status.data.lower()}.', 'success')
+            
+        except ValueError as e:
+            flash(str(e), 'error')
+            return redirect(url_for('ward_admin.review_application', application_id=application.id))
         
-        # Create timeline entry
-        timeline = ApplicationTimeline(
-            application_id=application.id,
-            status=form.status.data,
-            comment=form.comments.data
-        )
-        
-        db.session.add(timeline)
-        db.session.commit()
-        
-        flash('Application has been reviewed successfully.', 'success')
+        except Exception as e:
+            db.session.rollback()
+            flash('An error occurred while processing the review.', 'error')
+            return redirect(url_for('ward_admin.review_application', application_id=application.id))
+
         return redirect(url_for('ward_admin.applications'))
-    
+
     # Get documents for this application
     documents = Document.query.filter_by(application_id=application.id).all()
     
@@ -127,11 +142,11 @@ def reports():
             ward_id=current_user.ward_id, 
             status='PENDING'
         ).count(),
-        'total_allocated': db.session.query(db.func.sum(Application.amount))\
+        'total_allocated': db.session.query(db.func.sum(Application.amount_allocated))\
             .filter_by(ward_id=current_user.ward_id, status='APPROVED')\
             .scalar() or 0,
         'budget_remaining': ward.total_budget - (
-            db.session.query(db.func.sum(Application.amount))
+            db.session.query(db.func.sum(Application.amount_allocated))
             .filter_by(ward_id=current_user.ward_id, status='APPROVED')
             .scalar() or 0
         )
@@ -158,7 +173,7 @@ def export_reports(format):
             'Student Name': f"{app.applicant.first_name} {app.applicant.last_name}",
             'Email': app.applicant.email,
             'Program': app.program.name,
-            'Amount': app.amount,
+            'Amount': app.amount_allocated,
             'Status': app.status,
             'Application Date': app.created_at.strftime('%Y-%m-%d'),
             'Review Date': app.updated_at.strftime('%Y-%m-%d') if app.updated_at else '',
@@ -226,3 +241,66 @@ def export_reports(format):
     
     flash('Invalid export format specified.', 'error')
     return redirect(url_for('ward_admin.reports')) 
+
+@bp.route('/export_report', methods=['GET'])
+@login_required
+@ward_admin_required
+def export_report():
+    format = request.args.get('format', 'excel')
+    
+    # Query applications for this ward with academic information
+    query = db.session.query(
+        Application,
+        User,
+        AcademicInfo,
+        BursaryProgram
+    ).join(
+        User, Application.student_id == User.id
+    ).join(
+        AcademicInfo, User.id == AcademicInfo.user_id
+    ).join(
+        BursaryProgram, Application.program_id == BursaryProgram.id
+    ).filter(
+        Application.ward_id == current_user.ward_id
+    )
+
+    applications = query.all()
+    
+    if format == 'excel':
+        output = io.BytesIO()
+        writer = pd.ExcelWriter(output, engine='xlsxwriter')
+        
+        data = []
+        for app, user, academic_info, program in applications:
+            data.append({
+                'Application ID': app.id,
+                'Student Name': f"{user.first_name} {user.last_name}",
+                'Institution': academic_info.institution_name,
+                'Admission No': academic_info.student_id,
+                'Course': academic_info.course,
+                'Year of Study': academic_info.year_of_study,
+                'Program': program.name,
+                'Amount Requested': app.amount_requested,
+                'Amount Allocated': app.amount_allocated or 0,
+                'Status': app.status,
+                'Application Date': app.created_at.strftime('%Y-%m-%d'),
+                'Review Date': app.updated_at.strftime('%Y-%m-%d') if app.updated_at else ''
+            })
+        
+        df = pd.DataFrame(data)
+        df.to_excel(writer, sheet_name='Applications', index=False)
+        
+        worksheet = writer.sheets['Applications']
+        for i, col in enumerate(df.columns):
+            column_len = max(df[col].astype(str).apply(len).max(), len(col)) + 2
+            worksheet.set_column(i, i, column_len)
+        
+        writer.close()
+        output.seek(0)
+        
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'ward_{current_user.ward_id}_applications_{datetime.now().strftime("%Y%m%d")}.xlsx'
+        )

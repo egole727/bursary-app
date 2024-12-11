@@ -21,7 +21,7 @@
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4"><strong>Amount Requested:</strong></div>
-                        <div class="col-md-8">KES {{ "{:,.2f}".format(application.amount) }}</div>
+                        <div class="col-md-8">KES {{ "{:,.2f}".format(application.amount_requested) }}</div>
                     </div>
                     <div class="row mb-3">
                         <div class="col-md-4"><strong>Current Status:</strong></div>
@@ -37,6 +37,38 @@
                         <div class="col-md-4"><strong>Reason:</strong></div>
                         <div class="col-md-8">{{ application.reason }}</div>
                     </div>
+
+                    <form method="POST" action="{{ url_for('ward_admin.review_application', application_id=application.id) }}">
+                        {{ form.csrf_token }}
+                        
+                        <div class="mb-3">
+                            <label for="amount_allocated" class="form-label">Amount to Allocate (KES)</label>
+                            <input type="number" 
+                                   class="form-control" 
+                                   id="amount_allocated" 
+                                   name="amount_allocated" 
+                                   value="{{ application.amount_allocated or application.amount_requested }}"
+                                   min="0" 
+                                   max="{{ application.program.amount }}"
+                                   step="0.01"
+                                   required>
+                            <div class="form-text">Maximum available: KES {{ "{:,.2f}".format(application.program.amount) }}</div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.status.label(class="form-label") }}
+                            {{ form.status(class="form-select") }}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.review_note.label(class="form-label") }}
+                            {{ form.review_note(class="form-control", rows="3") }}
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Submit Review</button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
@@ -65,41 +97,6 @@
                     {% else %}
                         <p class="text-muted mb-0">No documents uploaded for this application.</p>
                     {% endif %}
-                </div>
-            </div>
-
-            <!-- Review Form -->
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Review Application</h5>
-                </div>
-                <div class="card-body">
-                    <form method="POST">
-                        {{ form.hidden_tag() }}
-                        
-                        <div class="mb-3">
-                            {{ form.status.label(class="form-label") }}
-                            {{ form.status(class="form-select") }}
-                            {% for error in form.status.errors %}
-                                <span class="text-danger">{{ error }}</span>
-                            {% endfor %}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form.comments.label(class="form-label") }}
-                            {{ form.comments(class="form-control", rows=4) }}
-                            {% for error in form.comments.errors %}
-                                <span class="text-danger">{{ error }}</span>
-                            {% endfor %}
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                Submit Review
-                            </button>
-                            <a href="{{ url_for('ward_admin.applications') }}" class="btn btn-secondary">Cancel</a>
-                        </div>
-                    </form>
                 </div>
             </div>
         </div>
