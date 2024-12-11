@@ -6,7 +6,7 @@ from app.admin.forms import (BursaryProgramForm, WardForm, ApplicationReviewForm
                            DocumentForm, WardAdminForm)
 from app.models import (User, BursaryProgram, Ward, Application, 
                        ApplicationTimeline, Profile)
-from app.models import Document as DocumentModel
+from app.models import Document as DocumentModel, AcademicInfo
 from app.decorators import admin_required
 from datetime import datetime
 from sqlalchemy import and_, func
@@ -32,28 +32,52 @@ from datetime import datetime, timedelta
 @login_required
 @admin_required
 def dashboard():
-    # Get application statistics
+    # Calculate total budget across all wards
+    total_budget = db.session.query(func.sum(Ward.total_budget)).scalar() or 0
+    
+    # Calculate total allocated amount
+    allocated_budget = db.session.query(func.sum(Application.amount_allocated))\
+        .filter(Application.status == 'APPROVED')\
+        .scalar() or 0
+
+    # Organize all statistics into a stats dictionary
     stats = {
         'total_applications': Application.query.count(),
         'pending_applications': Application.query.filter_by(status='PENDING').count(),
         'approved_applications': Application.query.filter_by(status='APPROVED').count(),
         'rejected_applications': Application.query.filter_by(status='REJECTED').count(),
-        'active_programs': BursaryProgram.query.filter_by(status='ACTIVE').count(),
-        'total_wards': Ward.query.count(),
-        'total_budget': db.session.query(func.sum(BursaryProgram.amount)).scalar() or 0,
-        'allocated_budget': db.session.query(
-            func.sum(Application.amount)
-        ).filter(Application.status == 'APPROVED').scalar() or 0
+        'allocated_budget': allocated_budget,
+        'total_budget': total_budget,
+        'budget_remaining': total_budget - allocated_budget
     }
     
     # Get recent applications
-    recent_applications = Application.query.order_by(
-        Application.created_at.desc()
-    ).limit(10).all()
+    recent_applications = Application.query\
+        .order_by(Application.created_at.desc())\
+        .limit(5)\
+        .all()
+    
+    # Get ward statistics
+    wards = Ward.query.all()
+    ward_stats = []
+    
+    for ward in wards:
+        total_ward_allocated = db.session.query(func.sum(Application.amount_allocated))\
+            .filter(Application.ward_id == ward.id, 
+                   Application.status == 'APPROVED')\
+            .scalar() or 0
+            
+        ward_stats.append({
+            'name': ward.name,
+            'total_applications': Application.query.filter_by(ward_id=ward.id).count(),
+            'allocated_budget': total_ward_allocated,
+            'budget_remaining': ward.total_budget - total_ward_allocated
+        })
 
     return render_template('admin/dashboard.html',
                          stats=stats,
-                         recent_applications=recent_applications)
+                         recent_applications=recent_applications,
+                         ward_stats=ward_stats)
 
 @bp.route('/programs')
 @login_required
@@ -156,33 +180,50 @@ def applications():
                          programs=programs,
                          wards=wards)
 
-@bp.route('/application/<int:application_id>/review', methods=['GET', 'POST'])
+@bp.route('/applications/<int:application_id>/review', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def review_application(application_id):
+    # Get the application
+    print("Debug: Accessing review route")
     application = Application.query.get_or_404(application_id)
+    
+    # Create the review form
     form = ApplicationReviewForm()
+    print(f"Debug: Application found: {application.id}")
+    print(f"Debug: Template path: admin/review_application.html")
     
     if form.validate_on_submit():
+        # Update application with form data
         application.status = form.status.data
-        application.review_note = form.comments.data
-        application.reviewed_by = current_user.id
+        application.amount_allocated = form.amount_allocated.data
         
-        timeline = ApplicationTimeline(
+        # Add review note to timeline
+        timeline_entry = ApplicationTimeline(
             application_id=application.id,
-            status=form.status.data,
-            comment=form.comments.data
+            action=f"Application {form.status.data}",
+            notes=form.review_note.data,
+            user_id=current_user.id
         )
+        db.session.add(timeline_entry)
         
-        db.session.add(timeline)
+        # Set reviewer
+        application.reviewer_id = current_user.id
+        application.updated_at = datetime.utcnow()
+        
         db.session.commit()
-        
         flash('Application has been reviewed successfully.', 'success')
         return redirect(url_for('admin.applications'))
     
+    # Pre-fill form if application is already reviewed
+    if application.status != 'PENDING':
+        form.status.data = application.status
+        form.amount_allocated.data = application.amount_allocated
+    
     return render_template('admin/review_application.html',
-                         application=application,
-                         form=form)
+                         title='Review Application',
+                         form=form,
+                         application=application)
 
 @bp.route('/document/<int:document_id>/download')
 @login_required
@@ -281,19 +322,21 @@ def reports():
     total_applications = Application.query.count()
     pending_applications = Application.query.filter_by(status='PENDING').count()
     approved_applications = Application.query.filter_by(status='APPROVED').count()
-    total_amount_approved = db.session.query(func.sum(Application.amount))\
+    total_amount_approved = db.session.query(func.sum(Application.amount_allocated))\
         .filter_by(status='APPROVED').scalar() or 0
 
-    # Get ward-wise statistics using updated case syntax
+    # Get ward-wise statistics using coalesce to handle NULL values
     ward_stats = db.session.query(
         Ward.id,
         Ward.name,
         func.count(Application.id).label('total_applications'),
-        func.sum(
-            case(
-                (Application.status == 'APPROVED', Application.amount),
-                else_=0
-            )
+        func.coalesce(
+            func.sum(
+                case(
+                    (Application.status == 'APPROVED', Application.amount_allocated),
+                    else_=0
+                )
+            ), 0
         ).label('total_approved')
     ).outerjoin(Application, Ward.id == Application.ward_id)\
      .group_by(Ward.id, Ward.name)\
@@ -306,73 +349,121 @@ def reports():
                          total_amount_approved=total_amount_approved,
                          ward_stats=ward_stats)
 
-@bp.route('/reports/export')
+@bp.route('/export_report', methods=['GET'])
 @login_required
 @admin_required
 def export_report():
     report_type = request.args.get('type', 'applications')
     format = request.args.get('format', 'excel')
+    ward_id = request.args.get('ward_id', None)
     
-    if report_type == 'applications':
-        # Get all applications with related data
-        applications = db.session.query(
-            Application,
-            User,
-            Ward.name.label('ward_name'),
-            BursaryProgram.name.label('program_name')
-        ).join(User, Application.student_id == User.id)\
-         .join(Ward, Application.ward_id == Ward.id)\
-         .join(BursaryProgram, Application.program_id == BursaryProgram.id)\
-         .all()
+    # Base query with academic information joined
+    query = db.session.query(
+        Application,
+        User,
+        AcademicInfo,
+        BursaryProgram,
+        Ward
+    ).join(
+        User, Application.student_id == User.id
+    ).join(
+        AcademicInfo, User.id == AcademicInfo.user_id
+    ).join(
+        BursaryProgram, Application.program_id == BursaryProgram.id
+    ).join(
+        Ward, Application.ward_id == Ward.id
+    )
 
-        # Create DataFrame
+    if ward_id:
+        query = query.filter(Application.ward_id == ward_id)
+
+    applications = query.all()
+    
+    if format == 'excel':
+        # Create Excel workbook
+        output = io.BytesIO()
+        writer = pd.ExcelWriter(output, engine='xlsxwriter')
+        
+        # Prepare data for DataFrame
         data = []
-        for app, user, ward_name, program_name in applications:
+        for app, user, profile, program, ward in applications:
             data.append({
                 'Application ID': app.id,
                 'Student Name': f"{user.first_name} {user.last_name}",
-                'Email': user.email,
-                'Ward': ward_name,
-                'Program': program_name,
-                'Amount': app.amount,
+                'Institution': AcademicInfo.institution_name,
+                'Admission No': AcademicInfo.student_id,
+                'Course': AcademicInfo.course,
+                'Year of Study': AcademicInfo.year_of_study,
+                'Ward': ward.name,
+                'Program': program.name,
+                'Amount Requested': app.amount_requested,
+                'Amount Allocated': app.amount_allocated or 0,
                 'Status': app.status,
-                'Date Applied': app.created_at.strftime('%Y-%m-%d'),
-                'Last Updated': app.updated_at.strftime('%Y-%m-%d')
+                'Application Date': app.created_at.strftime('%Y-%m-%d'),
+                'Review Date': app.updated_at.strftime('%Y-%m-%d') if app.updated_at else ''
             })
         
         df = pd.DataFrame(data)
+        df.to_excel(writer, sheet_name='Applications', index=False)
         
-        if format == 'excel':
-            output = io.BytesIO()
-            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                df.to_excel(writer, sheet_name='Applications', index=False)
-            output.seek(0)
-            
-            return send_file(
-                output,
-                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                as_attachment=True,
-                download_name=f'applications_report_{datetime.now().strftime("%Y%m%d")}.xlsx'
-            )
+        # Adjust column widths
+        worksheet = writer.sheets['Applications']
+        for i, col in enumerate(df.columns):
+            column_len = max(df[col].astype(str).apply(len).max(), len(col)) + 2
+            worksheet.set_column(i, i, column_len)
         
-        elif format == 'csv':
-            output = io.StringIO()
-            df.to_csv(output, index=False)
-            output.seek(0)
-            
-            return send_file(
-                io.BytesIO(output.getvalue().encode('utf-8')),
-                mimetype='text/csv',
-                as_attachment=True,
-                download_name=f'applications_report_{datetime.now().strftime("%Y%m%d")}.csv'
-            )
-
-    return jsonify({'error': 'Invalid report type'})
+        writer.close()
+        output.seek(0)
+        
+        return send_file(
+            output,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            as_attachment=True,
+            download_name=f'bursary_applications_report_{datetime.now().strftime("%Y%m%d")}.xlsx'
+        )
+    
+    elif format == 'csv':
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # Write headers
+        writer.writerow([
+            'Application ID', 'Student Name', 'Institution', 'Admission No',
+            'Course', 'Year of Study', 'Ward', 'Program', 'Amount Requested',
+            'Amount Allocated', 'Status', 'Application Date', 'Review Date'
+        ])
+        
+        # Write data
+        for app, user, academic_info, program, ward in applications:
+            writer.writerow([
+                app.id,
+                f"{user.first_name} {user.last_name}",
+                academic_info.institution_name,
+                academic_info.student_id,
+                academic_info.course,
+                academic_info.year_of_study,
+                ward.name,
+                program.name,
+                app.amount_requested,
+                app.amount_allocated or 0,
+                app.status,
+                app.created_at.strftime('%Y-%m-%d'),
+                app.updated_at.strftime('%Y-%m-%d') if app.updated_at else ''
+            ])
+        
+        output.seek(0)
+        return send_file(
+            io.BytesIO(output.getvalue().encode('utf-8')),
+            mimetype='text/csv',
+            as_attachment=True,
+            download_name=f'bursary_applications_report_{datetime.now().strftime("%Y%m%d")}.csv'
+        )
 
 @bp.route('/reports/ward/<int:ward_id>')
 @login_required
 @admin_required
 def ward_report(ward_id):
+    # Get the ward
     ward = Ward.query.get_or_404(ward_id)
     
     # Get all applications for this ward
@@ -383,48 +474,66 @@ def ward_report(ward_id):
     status_amounts = {}
     total_apps = len(applications)
     
+    # Initialize the dictionaries first
+    for status in ['PENDING', 'APPROVED', 'REJECTED']:
+        status_counts[status] = 0
+        status_amounts[status] = 0
+    
+    # Now count and sum
     for app in applications:
-        if app.status not in status_counts:
-            status_counts[app.status] = 0
-            status_amounts[app.status] = 0
         status_counts[app.status] += 1
         if app.status == 'APPROVED':
-            status_amounts[app.status] += app.amount
+            status_amounts[app.status] += (app.amount_allocated or 0)
     
-    status_distribution = [
-        {
+    # Create status distribution list
+    status_distribution = []
+    for status in status_counts:
+        if total_apps > 0:
+            percentage = (status_counts[status] / total_apps) * 100
+        else:
+            percentage = 0
+            
+        status_distribution.append({
             'name': status,
-            'count': count,
-            'percentage': (count / total_apps * 100) if total_apps > 0 else 0,
+            'count': status_counts[status],
+            'percentage': percentage,
             'amount': status_amounts[status]
-        }
-        for status, count in status_counts.items()
-    ]
+        })
     
-    # Get ward statistics
+    # Get ward statistics using direct queries
+    approved_count = Application.query.filter_by(
+        ward_id=ward_id, 
+        status='APPROVED'
+    ).count()
+    
+    total_allocated = db.session.query(
+        func.coalesce(func.sum(Application.amount_allocated), 0)
+    ).filter(
+        Application.ward_id == ward_id,
+        Application.status == 'APPROVED'
+    ).scalar()
+    
+    # Compile stats
     stats = {
         'total_applications': total_apps,
-        'approved_applications': Application.query.filter_by(ward_id=ward_id, status='APPROVED').count(),
-        'total_amount': db.session.query(func.sum(Application.amount))\
-            .filter_by(ward_id=ward_id, status='APPROVED').scalar() or 0,
-        'budget_remaining': ward.total_budget - (
-            db.session.query(func.sum(Application.amount))
-            .filter_by(ward_id=ward_id, status='APPROVED')
-            .scalar() or 0
-        ),
+        'approved_applications': approved_count,
+        'total_allocated_amount': total_allocated,
+        'total_amount': total_allocated,
+        'budget_remaining': ward.total_budget - total_allocated,
         'status_distribution': status_distribution
     }
     
     # Get recent applications
-    recent_applications = Application.query.filter_by(ward_id=ward_id)\
+    recent_applications = Application.query\
+        .filter_by(ward_id=ward_id)\
         .order_by(Application.created_at.desc())\
         .limit(10)\
         .all()
     
-    return render_template('admin/ward_report.html',
-                         ward=ward,
-                         stats=stats,
-                         recent_applications=recent_applications)
+    return render_template('admin/ward_report.html', 
+                         ward=ward, 
+                         stats=stats, 
+                         applications=recent_applications)
 
 @bp.route('/ward-admins')
 @login_required

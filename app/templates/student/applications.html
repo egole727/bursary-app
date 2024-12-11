@@ -28,7 +28,12 @@
                                 {% for application in applications %}
                                 <tr>
                                     <td>{{ application.program.name }}</td>
-                                    <td>KES {{ "{:,.2f}".format(application.amount) }}</td>
+                                    <td>
+                                        KES {{ "{:,.2f}".format(application.amount_requested) }}
+                                        {% if application.amount_allocated and application.status == 'APPROVED' %}
+                                            <small class="d-block text-muted">Allocated: KES {{ "{:,.2f}".format(application.amount_allocated) }}</small>
+                                        {% endif %}
+                                    </td>
                                     <td>
                                         <span class="badge {% if application.status == 'PENDING' %}bg-warning
                                                      {% elif application.status == 'APPROVED' %}bg-success

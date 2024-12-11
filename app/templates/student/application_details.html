@@ -48,7 +48,10 @@
                         <h5>Application Details</h5>
                         <div class="row">
                             <div class="col-md-12">
-                                <p><strong>Amount Requested:</strong> KES {{ '%0.2f'|format(application.amount|float) }}</p>
+                                <p><strong>Amount Requested:</strong> KES {{ '%0.2f'|format(application.amount_requested|float) }}</p>
+                                {% if application.amount_allocated and application.status == 'APPROVED' %}
+                                    <p><strong>Amount Allocated:</strong> KES {{ '%0.2f'|format(application.amount_allocated|float) }}</p>
+                                {% endif %}
                                 <p><strong>Reason for Application:</strong></p>
                                 <p class="text-muted">{{ application.reason }}</p>
                             </div>

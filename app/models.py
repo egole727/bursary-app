@@ -2,7 +2,7 @@ from datetime import datetime
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from app import db, login_manager
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, func
 
 class User(UserMixin, db.Model):
     __tablename__ = 'user'
@@ -125,7 +125,8 @@ class Application(db.Model):
     ward_id = db.Column(db.Integer, db.ForeignKey('ward.id'), nullable=False)
     program_id = db.Column(db.Integer, db.ForeignKey('bursary_program.id'), nullable=False)
     status = db.Column(db.String(50), default='PENDING')
-    amount = db.Column(db.Float, nullable=False)
+    amount_requested = db.Column(db.Float, nullable=False)  # Renamed from amount
+    amount_allocated = db.Column(db.Float, nullable=True)
     reason = db.Column(db.Text, nullable=False)
     reviewed_by = db.Column(db.Integer, db.ForeignKey('user.id'))
     review_note = db.Column(db.Text)
@@ -133,6 +134,32 @@ class Application(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     documents = db.relationship('Document', backref='application', lazy='dynamic')
     timeline = db.relationship('ApplicationTimeline', backref='application', lazy='dynamic')
+
+    def validate_allocation(self, amount):
+        """Validate the allocated amount against program budget and other constraints"""
+        if amount > self.program.amount:
+            raise ValueError(f"Allocated amount (KES {amount:,.2f}) cannot exceed program budget (KES {self.program.amount:,.2f})")
+        
+        # Get total allocated amount for this program
+        total_allocated = db.session.query(func.sum(Application.amount_allocated))\
+            .filter(Application.program_id == self.program_id,
+                   Application.status == 'APPROVED',
+                   Application.id != self.id)\
+            .scalar() or 0
+        
+        remaining_budget = self.program.amount - total_allocated
+        
+        if amount > remaining_budget:
+            raise ValueError(f"Insufficient program budget. Remaining: KES {remaining_budget:,.2f}")
+        
+        return True
+
+    @property
+    def allocated_amount_display(self):
+        """Format allocated amount for display"""
+        if self.amount_allocated is None:
+            return "Pending"
+        return f"KES {self.amount_allocated:,.2f}"
 
 class Document(db.Model):
     __tablename__ = 'document'

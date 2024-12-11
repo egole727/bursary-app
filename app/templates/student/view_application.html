@@ -39,7 +39,21 @@
                     <h5>Application Details</h5>
                     <dl class="row">
                         <dt class="col-sm-3">Requested Amount</dt>
-                        <dd class="col-sm-9">KES {{ "%.2f"|format(application.amount) }}</dd>
+                        <dd class="col-sm-9">KES {{ "%.2f"|format(application.amount_requested) }}</dd>
+
+                        {% if application.status == 'APPROVED' and application.amount_allocated %}
+                        <dt class="col-sm-3">Allocated Amount</dt>
+                        <dd class="col-sm-9">KES {{ "%.2f"|format(application.amount_allocated) }}</dd>
+                        {% endif %}
+
+                        <dt class="col-sm-3">Status</dt>
+                        <dd class="col-sm-9">
+                            <span class="badge bg-{{ 'success' if application.status == 'APPROVED' 
+                                                else 'danger' if application.status == 'REJECTED'
+                                                else 'warning' }}">
+                                {{ application.status }}
+                            </span>
+                        </dd>
 
                         <dt class="col-sm-3">Submission Date</dt>
                         <dd class="col-sm-9">{{ application.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</dd>
