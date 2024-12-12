@@ -79,7 +79,7 @@ class AcademicInfoForm(FlaskForm):
             raise ValidationError('This student ID is already registered.')
 
 class ApplicationForm(FlaskForm):
-    amount = DecimalField('Amount Requested (KES)', 
+    amount_requested = DecimalField('Amount Requested (KES)', 
                          validators=[DataRequired(), NumberRange(min=0)],
                          places=2)
     reason = TextAreaField('Reason for Application', 

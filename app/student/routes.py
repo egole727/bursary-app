@@ -190,8 +190,8 @@ def apply(program_id):
             application = Application(
                 student_id=current_user.id,
                 program_id=program_id,
-                ward_id=student_ward_id,  # Use the student's ward_id
-                amount=form.amount.data,
+                ward_id=student_ward_id,
+                amount_requested=form.amount_requested.data,
                 reason=form.reason.data,
                 status='PENDING',
                 created_at=datetime.utcnow(),
@@ -336,4 +336,3 @@ def program_detail(id):
                          program=program,
                          has_applied=existing_application is not None,
                          now=datetime.now())
-
