@@ -223,11 +223,11 @@ def review_application(application_id):
                          application=application,
                          documents=documents)
 
-@bp.route('/document/<int:doc_id>/download')
+@bp.route('/document/<int:doc_id>')
 @login_required
 @admin_required
-def download_document(doc_id):
-    """Download a specific document"""
+def view_document(doc_id):
+    """View a specific document"""
     document = DocumentModel.query.get_or_404(doc_id)
     uploads_dir = current_app.config['UPLOAD_FOLDER']
     return send_from_directory(uploads_dir, document.url)

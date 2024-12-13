@@ -91,10 +91,16 @@
                 <div class="card-body">
                     <div class="list-group">
                         {% for doc in application.documents %}
-                        <a href="{{ url_for('static', filename='uploads/' + doc.url) }}" 
+                        <a href="{{ url_for('admin.view_document', doc_id=doc.id) }}" 
                            class="list-group-item list-group-item-action"
                            target="_blank">
-                            <i class="fas fa-file-pdf me-2"></i>{{ doc.url }}
+                           <div>
+                            <i class="fas fa-file-alt me-2"></i>
+                            {{ doc.type }}
+                        </div>
+                        <span class="badge bg-primary rounded-pill">
+                            <i class="fas fa-download"></i>
+                        </span>
                         </a>
                         {% endfor %}
                     </div>
