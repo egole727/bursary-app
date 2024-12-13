@@ -170,13 +170,16 @@ def export_reports(format):
         data.append({
             'Application ID': app.id,
             'Student Name': f"{app.applicant.first_name} {app.applicant.last_name}",
-            'Email': app.applicant.email,
+            'Institution': app.applicant.academic_info.institution_name,
+            'Admission No': app.applicant.academic_info.student_id,
+            'Course': app.applicant.academic_info.course,
+            'Year of Study': app.applicant.academic_info.year_of_study,
             'Program': app.program.name,
-            'Amount': app.amount_allocated,
+            'Amount Requested': app.amount_requested,
+            'Amount Allocated': app.amount_allocated or 0,
             'Status': app.status,
             'Application Date': app.created_at.strftime('%Y-%m-%d'),
-            'Review Date': app.updated_at.strftime('%Y-%m-%d') if app.updated_at else '',
-            'Reviewer': f"{app.reviewer.first_name} {app.reviewer.last_name}" if app.reviewer else ''
+            'Review Date': app.updated_at.strftime('%Y-%m-%d') if app.updated_at else ''
         })
     
     if format == 'csv':
@@ -241,7 +244,7 @@ def export_reports(format):
     flash('Invalid export format specified.', 'error')
     return redirect(url_for('ward_admin.reports')) 
 
-@bp.route('/export_report', methods=['GET'])
+@bp.route('/reports/export_all', methods=['GET'])
 @login_required
 @ward_admin_required
 def export_report():

@@ -382,14 +382,14 @@ def export_report():
         
         # Prepare data for DataFrame
         data = []
-        for app, user, profile, program, ward in applications:
+        for app, user, academic_info, program, ward in applications:
             data.append({
                 'Application ID': app.id,
                 'Student Name': f"{user.first_name} {user.last_name}",
-                'Institution': AcademicInfo.institution_name,
-                'Admission No': AcademicInfo.student_id,
-                'Course': AcademicInfo.course,
-                'Year of Study': AcademicInfo.year_of_study,
+                'Institution': academic_info.institution_name,
+                'Admission No': academic_info.student_id,
+                'Course': academic_info.course,
+                'Year of Study': academic_info.year_of_study,
                 'Ward': ward.name,
                 'Program': program.name,
                 'Amount Requested': app.amount_requested,
