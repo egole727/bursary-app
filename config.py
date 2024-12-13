@@ -20,8 +20,8 @@ class Config:
     
     # File Upload settings
     UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
-    MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16MB max file size
-    ALLOWED_EXTENSIONS = {'pdf', 'png', 'jpg', 'jpeg'}
+    MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB max file size
+    ALLOWED_EXTENSIONS = {'pdf'}
 
     # Application Settings
     SECRET_KEY = os.environ.get('SECRET_KEY')

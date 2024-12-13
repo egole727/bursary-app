@@ -5,8 +5,7 @@ from app.admin import bp
 from app.admin.forms import (BursaryProgramForm, WardForm, ApplicationReviewForm, 
                            DocumentForm, WardAdminForm)
 from app.models import (User, BursaryProgram, Ward, Application, 
-                       ApplicationTimeline, Profile)
-from app.models import Document as DocumentModel, AcademicInfo
+                       ApplicationTimeline, Profile, Document as DocumentModel, AcademicInfo)
 from app.decorators import admin_required
 from datetime import datetime
 from sqlalchemy import and_, func
@@ -15,7 +14,7 @@ import io
 import csv
 from functools import wraps
 from datetime import datetime
-from docx import Document
+from docx import Document, document
 from docx.shared import Inches
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
@@ -215,32 +214,23 @@ def review_application(application_id):
     if application.status != 'PENDING':
         form.status.data = application.status
         form.amount_allocated.data = application.amount_allocated
-    
+
+    # Get documents
+    documents = DocumentModel.query.filter_by(application_id=application.id).all()
     return render_template('admin/review_application.html',
                          title='Review Application',
                          form=form,
-                         application=application)
+                         application=application,
+                         documents=documents)
 
-@bp.route('/document/<int:document_id>/download')
+@bp.route('/document/<int:doc_id>/download')
 @login_required
 @admin_required
-def download_document(document_id):
-    document = DocumentModel.query.get_or_404(document_id)
-    file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], document.url)
-    
-    if not os.path.exists(file_path):
-        flash('Document file not found.', 'error')
-        return redirect(url_for('admin.applications'))
-        
-    try:
-        return send_file(
-            file_path,
-            as_attachment=True,
-            download_name=document.url
-        )
-    except Exception as e:
-        flash(f'Error downloading document: {str(e)}', 'error')
-        return redirect(url_for('admin.applications'))
+def download_document(doc_id):
+    """Download a specific document"""
+    document = DocumentModel.query.get_or_404(doc_id)
+    uploads_dir = current_app.config['UPLOAD_FOLDER']
+    return send_from_directory(uploads_dir, document.url)
 
 @bp.route('/wards')
 @login_required
