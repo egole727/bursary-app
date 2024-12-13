@@ -185,13 +185,10 @@ def applications():
 @admin_required
 def review_application(application_id):
     # Get the application
-    print("Debug: Accessing review route")
     application = Application.query.get_or_404(application_id)
     
     # Create the review form
     form = ApplicationReviewForm()
-    print(f"Debug: Application found: {application.id}")
-    print(f"Debug: Template path: admin/review_application.html")
     
     if form.validate_on_submit():
         # Update application with form data
@@ -201,9 +198,8 @@ def review_application(application_id):
         # Add review note to timeline
         timeline_entry = ApplicationTimeline(
             application_id=application.id,
-            action=f"Application {form.status.data}",
-            notes=form.review_note.data,
-            user_id=current_user.id
+            status=form.status.data,
+            comment=form.review_note.data
         )
         db.session.add(timeline_entry)
         

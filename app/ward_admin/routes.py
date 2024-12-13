@@ -77,9 +77,8 @@ def review_application(application_id):
             # Create timeline entry
             timeline_entry = ApplicationTimeline(
                 application_id=application.id,
-                action=f"Application {form.status.data.lower()} by Ward Admin",
-                notes=f"Amount allocated: KES {form.amount_allocated.data:,.2f}\n{form.review_note.data if form.review_note.data else ''}",
-                created_at=datetime.utcnow()
+                status=form.status.data,
+                comment=f"Amount allocated: KES {form.amount_allocated.data:,.2f}\n{form.review_note.data if form.review_note.data else ''}"
             )
             
             db.session.add(timeline_entry)
