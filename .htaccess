@@ -1,0 +1,27 @@
+# Use mod_rewrite to route requests to the Flask application
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Redirect all requests to the Flask application
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ /run.py/$1 [L]
+
+    # Optionally, force HTTPS
+    # RewriteCond %{HTTPS} off
+    # RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# Set the WSGI script alias
+WSGIScriptAlias / /home/u946680789/public_html/run.py
+
+# Set the directory for the WSGI application
+<Directory /home/u946680789/public_html/>
+    Require all granted
+</Directory>
+
+# Set environment variables
+SetEnv FLASK_ENV production
+SetEnv DATABASE_URL postgresql://neondb_owner:IURSv2THec1f@ep-raspy-shadow-a5whmwto-pooler.us-east-2.aws.neon.tech/neondb?sslmode=require
+SetEnv SECRET_KEY da6ae085fa01b239979128b8a2047942a01c27fbb2ffe5f2603c132eb5830ad6
+SetEnv JWT_SECRET_KEY e8076965b0dc6582b99c58c06bbd18dcb0a1fc4e34abe0494057ff74f9b8368e

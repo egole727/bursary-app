@@ -9,6 +9,7 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 import os
 import mimetypes
+from app.utils import upload_file_to_s3
 
 def student_required(f):
     @wraps(f)
@@ -205,11 +206,8 @@ def apply(program_id):
             if not form.documents.data or not any(file.filename for file in form.documents.data):
                 flash('At least one document must be uploaded', 'error')
                 return redirect(request.url)
-            
+
             # Handle document uploads
-            upload_folder = current_app.config['UPLOAD_FOLDER']
-            os.makedirs(upload_folder, exist_ok=True)
-            
             for file in form.documents.data:
                 # Validate each file
                 is_valid, message = validate_file(file)
@@ -217,26 +215,21 @@ def apply(program_id):
                     flash(f'File validation error ({file.filename}): {message}', 'error')
                     return redirect(request.url)
 
-                # Save file if valid
-                filename = secure_filename(file.filename)
-                filepath = os.path.join(upload_folder, filename)
+                # Upload file to S3
+                file_url = upload_file_to_s3(file, current_app.config['AWS_S3_BUCKET'])
                 
-                # Ensure unique filename
-                counter = 1
-                while os.path.exists(filepath):
-                    name, ext = os.path.splitext(filename)
-                    filename = f"{name}_{counter}{ext}"
-                    filepath = os.path.join(upload_folder, filename)
-                    counter += 1
+                if not file_url:
+                    flash(f'Failed to upload {file.filename} to S3', 'error')
+                    return redirect(request.url)
 
-                file.save(filepath)
-                
+                # Create Document entry with the S3 URL
                 document = Document(
                     application_id=application.id,
                     type='SUPPORTING_DOCUMENT',
-                    url=filename
+                    url=file_url  # Store the S3 URL
                 )
                 db.session.add(document)
+
             
             # Create timeline entry
             timeline = ApplicationTimeline(
@@ -336,3 +329,27 @@ def program_detail(id):
                          program=program,
                          has_applied=existing_application is not None,
                          now=datetime.now())
+
+
+@bp.route('/upload', methods=['POST'])
+@student_required
+@login_required
+def upload():
+    if 'file' not in request.files:
+        flash('No file part')
+        return redirect(request.url)
+    file = request.files['file']
+    if file.filename == '':
+        flash('No selected file')
+        return redirect(request.url)
+    if file:
+        file_url = upload_file_to_s3(file, current_app.config['AWS_S3_BUCKET'])
+        if file_url:
+            # Save the file URL to the database
+            new_document = DocumentModel(url=file_url)
+            db.session.add(new_document)
+            db.session.commit()
+            flash('File uploaded successfully')
+        else:
+            flash('File upload failed')
+    return redirect(url_for('student.dashboard'))

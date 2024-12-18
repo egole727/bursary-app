@@ -11,6 +11,8 @@ import io
 import pandas as pd
 from datetime import datetime
 from sqlalchemy.sql import func
+from flask import current_app
+
 
 @bp.route('/dashboard')
 @login_required
@@ -115,9 +117,7 @@ def view_document(doc_id):
     if document.application.ward_id != current_user.ward_id:
         flash('You do not have permission to view this document.', 'error')
         return redirect(url_for('ward_admin.applications'))
-    
-    uploads_dir = current_app.config['UPLOAD_FOLDER']
-    return send_from_directory(uploads_dir, document.url)
+    return redirect(document.url)
 
 @bp.route('/reports')
 @login_required

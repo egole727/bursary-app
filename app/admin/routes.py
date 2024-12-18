@@ -26,7 +26,6 @@ from sqlalchemy import func, case
 from datetime import datetime, timedelta
 
 
-
 @bp.route('/dashboard')
 @login_required
 @admin_required
@@ -229,8 +228,8 @@ def review_application(application_id):
 def view_document(doc_id):
     """View a specific document"""
     document = DocumentModel.query.get_or_404(doc_id)
-    uploads_dir = current_app.config['UPLOAD_FOLDER']
-    return send_from_directory(uploads_dir, document.url)
+    # uploads_dir = current_app.config['UPLOAD_FOLDER']
+    return redirect(document.url)
 
 @bp.route('/wards')
 @login_required

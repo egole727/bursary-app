@@ -19,7 +19,7 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # File Upload settings
-    UPLOAD_FOLDER = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'uploads')
+    # UPLOAD_FOLDER = '/home/u946680789/public_html/uploads'
     MAX_CONTENT_LENGTH = 5 * 1024 * 1024  # 5MB max file size
     ALLOWED_EXTENSIONS = {'pdf'}
 
@@ -42,6 +42,13 @@ class Config:
     # JWT settings
     JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY')
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
+
+
+    # AWS S3 settings
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_S3_BUCKET = os.environ.get('AWS_S3_BUCKET')
+    AWS_S3_REGION = os.environ.get('AWS_S3_REGION', 'us-east-1')  # Default region
 
     # HTTPS/SSL
     CSRF_ENABLED = True
