@@ -14,6 +14,7 @@ login_manager = LoginManager()
 mail = Mail()
 migrate = Migrate()
 
+
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
@@ -24,26 +25,32 @@ def create_app(config_class=Config):
     mail.init_app(app)
     migrate.init_app(app, db)
 
-    login_manager.login_view = 'auth.login'
-    login_manager.login_message = 'Please log in to access this page.'
-    login_manager.login_message_category = 'info'
+    login_manager.login_view = "auth.login"
+    login_manager.login_message = "Please log in to access this page."
+    login_manager.login_message_category = "info"
 
     # Register blueprints
     from app.auth import bp as auth_bp
-    app.register_blueprint(auth_bp, url_prefix='/auth')
+
+    app.register_blueprint(auth_bp, url_prefix="/auth")
 
     from app.student import bp as student_bp
-    app.register_blueprint(student_bp, url_prefix='/student')
+
+    app.register_blueprint(student_bp, url_prefix="/student")
 
     from app.admin import bp as admin_bp
-    app.register_blueprint(admin_bp, url_prefix='/admin')
+
+    app.register_blueprint(admin_bp, url_prefix="/admin")
 
     from app.main import bp as main_bp
+
     app.register_blueprint(main_bp)
 
     from app.ward_admin import bp as ward_admin_bp
-    app.register_blueprint(ward_admin_bp, url_prefix='/ward-admin')
+
+    app.register_blueprint(ward_admin_bp, url_prefix="/ward-admin")
 
     return app
+
 
 from app import models

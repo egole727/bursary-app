@@ -3,6 +3,7 @@ from app.models import User
 
 app = create_app()
 
+
 def test_connection():
     with app.app_context():
         try:
@@ -12,6 +13,7 @@ def test_connection():
             print(f"Found {len(users)} users")
         except Exception as e:
             print(f"Error connecting to database: {e}")
+
 
 if __name__ == "__main__":
     test_connection()
