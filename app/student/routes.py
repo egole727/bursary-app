@@ -181,14 +181,14 @@ def validate_file(file):
     return True, "File is valid"
 
 
+import logging
+
 @bp.route("/apply/<int:program_id>", methods=["GET", "POST"])
 @login_required
 @student_required
 def apply(program_id):
     # Check if student has completed their profile
     profile = Profile.query.filter_by(user_id=current_user.id).first()
-    # academic = AcademicInfo.query.filter_by(user_id=current_user.id).first()
-
     if not profile:
         flash(
             "Please complete your profile and academic information before applying for bursaries.",
