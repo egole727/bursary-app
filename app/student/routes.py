@@ -13,6 +13,7 @@ from app.models import (
     AcademicInfo,
 )
 from werkzeug.utils import secure_filename
+import logging
 from datetime import datetime
 import os
 import mimetypes
@@ -289,7 +290,7 @@ def apply(program_id):
         except Exception as e:
             db.session.rollback()
             flash(f"Error submitting application: {str(e)}", "error")
-            print(f"Error submitting application: {str(e)}")
+            logging.error(f"Error submitting application: {str(e)}")
 
     return render_template("student/apply.html", form=form, program=program)
 
