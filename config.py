@@ -109,6 +109,13 @@ class ProductionConfig(Config):
         ))
         file_handler.setLevel(logging.INFO)
         app.logger.addHandler(file_handler)
+class Config:
+    @classmethod
+    def verify_aws_config(cls):
+        required = ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_S3_BUCKET', 'AWS_S3_REGION']
+        for key in required:
+            if not os.environ.get(key):
+                raise ValueError(f"Missing required AWS config: {key}")
 
 # Database connection test
 tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
