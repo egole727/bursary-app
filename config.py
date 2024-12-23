@@ -67,10 +67,6 @@ class Config:
     
     SQLALCHEMY_DATABASE_URI = database_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    
-    # ...existing code...
-    CSRF_ENABLED = True
-    CSRF_SECRET_KEY = os.environ.get("CSRF_SECRET_KEY")
 
     # HTTPS/SSL
     CSRF_ENABLED = True
