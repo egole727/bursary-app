@@ -40,8 +40,8 @@ def upload_file_to_s3(file, bucket):
         s3_client.upload_fileobj(
             file,
             bucket,
-            safe_filename
-             ExtraArgs={'ContentType': content_type}
+            safe_filename,
+            ExtraArgs={'ContentType': content_type}
         )
         
         url = f"https://{bucket}.s3.{current_app.config['AWS_S3_REGION']}.amazonaws.com/{safe_filename}"
