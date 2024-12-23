@@ -15,9 +15,42 @@ class Config:
     DEBUG = ENV == "development"
     TESTING = False
 
-    # Database settings
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    # AWS Configuration
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_S3_BUCKET = os.environ.get('AWS_S3_BUCKET')
+    AWS_S3_REGION = os.environ.get('AWS_S3_REGION')
+
+    # URL Configuration
+    if ENV == "development":
+        SERVER_NAME = None
+        PREFERRED_URL_SCHEME = "http"
+        HOST = "127.0.0.1"
+        PORT = 5000
+    else:
+        SERVER_NAME = None
+        PREFERRED_URL_SCHEME = "https"
+
+    @classmethod
+    def init_app(cls, app):
+        # Verify required configuration
+        required_configs = [
+            'AWS_ACCESS_KEY_ID',
+            'AWS_SECRET_ACCESS_KEY',
+            'AWS_S3_BUCKET',
+            'DATABASE_URL'
+        ]
+        
+        missing = [key for key in required_configs if not os.environ.get(key)]
+        if missing:
+            raise ValueError(f"Missing required environment variables: {', '.join(missing)}")
+
+    SESSION_COOKIE_HTTPONLY = True
+    REMEMBER_COOKIE_HTTPONLY = True
+
+    # JWT settings
+    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
 
     # File Upload settings
     # UPLOAD_FOLDER = '/home/u946680789/public_html/uploads'
@@ -27,28 +60,9 @@ class Config:
     # Application Settings
     SECRET_KEY = os.environ.get("SECRET_KEY")
 
-    # URL Configuration
-    if ENV == "development":
-        SERVER_NAME = None  # Let Flask handle it in development
-    else:
-        SERVER_NAME = None  # Let Render.com handle it in production
-
-    # Security Settings
-    PREFERRED_URL_SCHEME = "https"  # Always prefer HTTPS
-    SESSION_COOKIE_SECURE = ENV == "production"  # Secure cookies in production
-    REMEMBER_COOKIE_SECURE = ENV == "production"
-    SESSION_COOKIE_HTTPONLY = True
-    REMEMBER_COOKIE_HTTPONLY = True
-
-    # JWT settings
-    JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=1)
-
-    # AWS S3 settings
-    AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
-    AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
-    AWS_S3_BUCKET = os.environ.get("AWS_S3_BUCKET")
-    AWS_S3_REGION = os.environ.get("AWS_S3_REGION", "us-east-1")  # Default region
+    # Database settings
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
 
     # HTTPS/SSL
     CSRF_ENABLED = True
@@ -78,6 +92,23 @@ class Config:
         # Blocks page if XSS attack is detected
     }
 
+class ProductionConfig(Config):
+    ENV = 'production'
+    DEBUG = False
+    
+    @classmethod
+    def init_app(cls, app):
+        Config.init_app(app)
+        # Configure production-specific logging
+        import logging
+        from logging.handlers import RotatingFileHandler
+        
+        file_handler = RotatingFileHandler('app.log', maxBytes=10240, backupCount=10)
+        file_handler.setFormatter(logging.Formatter(
+            '%(asctime)s %(levelname)s: %(message)s [in %(pathname)s:%(lineno)d]'
+        ))
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
 
 # Database connection test
 tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
