@@ -120,6 +120,25 @@ class Config:
 # Database connection test
 tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
 
+class Config:
+    # Database Configuration
+    database_url = os.environ.get("DATABASE_URL")
+    if database_url and database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    
+    SQLALCHEMY_DATABASE_URI = database_url
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # ...existing code...
+    CSRF_ENABLED = True
+    CSRF_SECRET_KEY = os.environ.get("CSRF_SECRET_KEY")
+    
+    @classmethod
+    def init_app(cls, app):
+        # Verify database configuration
+        if not cls.SQLALCHEMY_DATABASE_URI:
+            raise ValueError("DATABASE_URL environment variable is not set")
+
 
 async def async_main() -> None:
     engine = create_async_engine(
