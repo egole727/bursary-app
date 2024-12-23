@@ -60,9 +60,17 @@ class Config:
     # Application Settings
     SECRET_KEY = os.environ.get("SECRET_KEY")
 
-    # Database settings
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL")
-    SQLALCHEMY_TRACK_MODIFICATIONS = True
+    # Database Configuration
+    database_url = os.environ.get("DATABASE_URL")
+    if database_url and database_url.startswith("postgres://"):
+        database_url = database_url.replace("postgres://", "postgresql://", 1)
+    
+    SQLALCHEMY_DATABASE_URI = database_url
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    
+    # ...existing code...
+    CSRF_ENABLED = True
+    CSRF_SECRET_KEY = os.environ.get("CSRF_SECRET_KEY")
 
     # HTTPS/SSL
     CSRF_ENABLED = True
@@ -77,6 +85,13 @@ class Config:
     MAIL_DEFAULT_SENDER = os.environ.get("MAIL_DEFAULT_SENDER") or os.environ.get(
         "MAIL_USERNAME"
     )
+
+    @classmethod
+    def verify_aws_config(cls):
+        required = ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_S3_BUCKET', 'AWS_S3_REGION']
+        for key in required:
+            if not os.environ.get(key):
+                raise ValueError(f"Missing required AWS config: {key}")
 
     # Security Headers
     SECURITY_HEADERS = {
@@ -109,35 +124,9 @@ class ProductionConfig(Config):
         ))
         file_handler.setLevel(logging.INFO)
         app.logger.addHandler(file_handler)
-class Config:
-    @classmethod
-    def verify_aws_config(cls):
-        required = ['AWS_ACCESS_KEY_ID', 'AWS_SECRET_ACCESS_KEY', 'AWS_S3_BUCKET', 'AWS_S3_REGION']
-        for key in required:
-            if not os.environ.get(key):
-                raise ValueError(f"Missing required AWS config: {key}")
 
 # Database connection test
 tmpPostgres = urlparse(os.getenv("DATABASE_URL"))
-
-class Config:
-    # Database Configuration
-    database_url = os.environ.get("DATABASE_URL")
-    if database_url and database_url.startswith("postgres://"):
-        database_url = database_url.replace("postgres://", "postgresql://", 1)
-    
-    SQLALCHEMY_DATABASE_URI = database_url
-    SQLALCHEMY_TRACK_MODIFICATIONS = False
-    
-    # ...existing code...
-    CSRF_ENABLED = True
-    CSRF_SECRET_KEY = os.environ.get("CSRF_SECRET_KEY")
-    
-    @classmethod
-    def init_app(cls, app):
-        # Verify database configuration
-        if not cls.SQLALCHEMY_DATABASE_URI:
-            raise ValueError("DATABASE_URL environment variable is not set")
 
 
 async def async_main() -> None:
