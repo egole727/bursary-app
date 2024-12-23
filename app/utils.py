@@ -19,6 +19,17 @@ def upload_file_to_s3(file, bucket):
             current_app.logger.error("File too large")
             return None
         file.seek(0)
+
+        # Define allowed file types
+        ALLOWED_MIMETYPES = {
+            'application/pdf': '.pdf'
+        }
+        
+        # Validate file type
+        content_type = file.content_type
+        if content_type not in ALLOWED_MIMETYPES:
+            current_app.logger.error(f"Invalid file type: {content_type}")
+            return None
         
         # Sanitize filename - remove spaces and special characters
         original_filename = secure_filename(file.filename)
@@ -32,9 +43,6 @@ def upload_file_to_s3(file, bucket):
             aws_secret_access_key=current_app.config['AWS_SECRET_ACCESS_KEY'],
             region_name=current_app.config['AWS_S3_REGION']
         )
-        
-        # Set default content type if None
-        content_type = file.content_type
 
         # Upload with explicit content type
         s3_client.upload_fileobj(
