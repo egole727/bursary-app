@@ -86,7 +86,7 @@ class DocumentForm(FlaskForm):
         validators=[
             FileRequired(),
             FileAllowed(
-                ["pdf", "doc", "docx"], "Only PDF and Word documents are allowed!"
+                ["pdf"], "Only PDF documents are allowed!"
             ),
         ],
     )

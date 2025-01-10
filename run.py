@@ -1,5 +1,6 @@
 from app import create_app
 import os
+load_dotenv()
 
 # import secrets
 
@@ -12,4 +13,14 @@ import os
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", debug=True, port=int(os.environ.get("PORT", 5000)))
+    # Set environment variables for development
+    os.environ['FLASK_ENV'] = 'development'
+    os.environ['FLASK_DEBUG'] = '1'
+    
+    # Run app with debug mode enabled
+    app.run(
+        host="0.0.0.0",
+        debug=True,  # Enables debug mode
+        port=int(os.environ.get("PORT", 5000)),
+        use_reloader=True  # Enables hot reload
+    )

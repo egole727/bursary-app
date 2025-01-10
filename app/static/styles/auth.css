@@ -35,6 +35,7 @@
 /* Form Styling */
 .auth-form .form-group {
     margin-bottom: 1.5rem;
+    /* text-align: center; */
     position: relative;
 }
 
@@ -55,12 +56,20 @@
     font-weight: 500;
     margin-bottom: 0.5rem;
     color: var(--meta-text-primary);
+    display: block;
+    /* text-align: center; */
+    justify-content: center;
+    align-items: center;
+}
+
+.auth-form .form-control::placeholder {
+    /* text-align: center; */
 }
 
 /* Submit Button */
 .auth-form .btn-submit {
     width: 100%;
-    padding: 0.8rem;
+    padding: 1rem;
     background: var(--meta-primary);
     border: none;
     border-radius: 12px;
@@ -80,6 +89,11 @@
 /* Checkbox Styling */
 .auth-form .form-check {
     margin: 1rem 0;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
 }
 
 .auth-form .form-check-input {

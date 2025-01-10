@@ -65,7 +65,9 @@ def init_db():
                 total_budget=1500000.0,
             ),
             Ward(
-                name="Karen", description="Karen/Langata Ward", total_budget=2500000.0
+                name="Karen",
+                description="Karen/Langata Ward",
+                total_budget=2500000.0
             ),
         ]
         for ward in wards:

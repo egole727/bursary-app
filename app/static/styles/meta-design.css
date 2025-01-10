@@ -133,6 +133,7 @@ body {
 /* Alert Enhancements */
 .alert {
     border: none;
+    background-color: #17A2B8;
     border-radius: var(--border-radius-md);
     padding: 1rem 1.25rem;
 }
