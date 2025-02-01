@@ -1,6 +1,8 @@
 from app import create_app
 import os
-import load_dotenv()
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # import secrets
 
